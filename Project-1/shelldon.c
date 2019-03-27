@@ -39,12 +39,23 @@ int main(void)
 
     if (shouldrun) {
       /*
-	After reading user input, the steps are 
-	(1) Fork a child process using fork()
-	(2) the child process will invoke execv()
-	(3) if command included &, parent will invoke wait()
+			After reading user input, the steps are 
+			(1) Fork a child process using fork()
+			(2) the child process will invoke execv()
+			(3) if command included &, parent will invoke wait()
        */
-    }
+			child = fork();
+			if(child == 0) 
+			{
+				status = execv(args[0], args);
+			}
+			else if(background == 0)
+			{
+				int childStatus;
+				waitpid(child, &childStatus, 0);
+			}
+			
+  	}
   }
   return 0;
 }
