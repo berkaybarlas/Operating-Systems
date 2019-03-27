@@ -44,19 +44,28 @@ int main(void)
 			(2) the child process will invoke execv()
 			(3) if command included &, parent will invoke wait()
        */
-			child = fork();
-			if(child == 0) 
+       
+      //checking if file exists and is executable
+      if( access( args[0], X_OK ) != -1 ) 
+      {// file is executable
+		    child = fork();
+				if(child == 0) 
+				{
+					status = execv(args[0], args);
+				}
+				else if(background == 0)
+				{
+					int childStatus;
+					waitpid(child, &childStatus, 0);
+				}
+			} else 
 			{
-				status = execv(args[0], args);
-			}
-			else if(background == 0)
-			{
-				int childStatus;
-				waitpid(child, &childStatus, 0);
+  			printf("Executable program not found\n");	
 			}
 			
   	}
   }
+  wait(NULL);
   return 0;
 }
 
