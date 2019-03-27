@@ -1,8 +1,8 @@
 /*
  * shelldon interface program
 
-KUSIS ID: PARTNER NAME:
-KUSIS ID: PARTNER NAME:
+KUSIS ID: 60210 PARTNER NAME: Ege Onat Özsüer
+KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 
  */
 
