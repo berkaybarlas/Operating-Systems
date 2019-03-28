@@ -11,7 +11,9 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <string.h>
+#include <fcntl.h>
 
 
 #define MAX_LINE       80 /* 80 chars per line, per command, should be enough. */
@@ -36,15 +38,12 @@ int main(void)
     background = 0;
 		
     shouldrun = parseCommand(inputBuffer,args,&background);       /* get next command */
-		
+				
     if (strncmp(inputBuffer, "exit", 4) == 0)
     {
       shouldrun = 0;     /* Exiting from shelldon*/
     }
     
-      //checking if redirection needs to be done
-		checkRedirection(args, &redirect, outFile);
-
     if (shouldrun) {
       /*
 			After reading user input, the steps are 
@@ -52,10 +51,30 @@ int main(void)
 			(2) the child process will invoke execv()
 			(3) if command included &, parent will invoke wait()
        */
-       
+
+      
 	    child = fork();
 			if(child == 0) 
 			{
+				checkRedirection(args, &redirect, outFile); //checking for redirection
+   	  	if(redirect != 0)
+    	  {
+    	  	int fd;
+    	  	if(redirect == 1)
+    	  	{
+    	  		fd = open(outFile, O_CREAT | O_RDWR | O_TRUNC, 00644);
+    	  	}
+    	  	else if(redirect == 2)
+    	  	{
+    	  		fd = open(outFile, O_CREAT | O_RDWR | O_APPEND, 00644);
+    	  	}
+      		if (fd < 0)
+      		{ 
+      			printf("Failed to create output file");
+      			return 2;
+      		}
+      		dup2 (fd, STDOUT_FILENO);
+      	}
 				status = execvp(args[0], args);
 				printf("Failed to find executable\n");
 				return 0;
@@ -80,11 +99,15 @@ void checkRedirection(char *args[], int *redirect, char outFile[])
   	{
   		*redirect = 1;
   		strcpy(outFile, args[i+1]);
+  		args[i] = NULL;
+  		break;
   	}
   	else if(strcmp(args[i], ">>") == 0)
   	{
   		*redirect = 2;
   		strcpy(outFile, args[i+1]);
+  		args[i] = NULL;
+  		break;
   	}
   	i++;
 	}
