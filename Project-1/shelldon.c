@@ -17,11 +17,14 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #define MAX_LINE       80 /* 80 chars per line, per command, should be enough. */
 
 int parseCommand(char inputBuffer[], char *args[],int *background);
+void checkRedirection(char *args[], int *redirect, char outFile[]);
 
 int main(void)
 {
   char inputBuffer[MAX_LINE]; 	        /* buffer to hold the command entered */
   int background;             	        /* equals 1 if a command is followed by '&' */
+ 	int redirect;											/* equals 1 if redirect with trunc, 2 if append*/
+ 	char outFile[MAX_LINE];						/* 80 chars to hold the output file with path.*/
   char *args[MAX_LINE/2 + 1];	        /* command line (of 80) has max of 40 arguments */
   pid_t child;            		/* process id of the child process */
   int status;           		/* result from execv system call*/
@@ -35,7 +38,12 @@ int main(void)
     shouldrun = parseCommand(inputBuffer,args,&background);       /* get next command */
 		
     if (strncmp(inputBuffer, "exit", 4) == 0)
+    {
       shouldrun = 0;     /* Exiting from shelldon*/
+    }
+    
+      //checking if redirection needs to be done
+		checkRedirection(args, &redirect, outFile);
 
     if (shouldrun) {
       /*
@@ -62,6 +70,26 @@ int main(void)
   wait(NULL);
   return 0;
 }
+
+void checkRedirection(char *args[], int *redirect, char outFile[])
+{
+	int i=0;
+  while(args[i] != NULL)
+  {
+  	if(strcmp(args[i], ">") == 0)
+  	{
+  		*redirect = 1;
+  		strcpy(outFile, args[i+1]);
+  	}
+  	else if(strcmp(args[i], ">>") == 0)
+  	{
+  		*redirect = 2;
+  		strcpy(outFile, args[i+1]);
+  	}
+  	i++;
+	}
+}
+
 
 /** 
  * The parseCommand function below will not return any value, but it will just: read
