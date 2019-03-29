@@ -22,7 +22,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #define MAX_LINE       80 /* 80 chars per line, per command, should be enough. */
 #define HIST_LENGTH		 10 // Number of args to be stored in history
 
-int parseCommand(char inputBuffer[], char *args[],int *background);
+//int parseCommand(char inputBuffer[], char *args[],int *background);
 void checkRedirection(char *args[], int *redirect, char outFile[]);
 int codesearch(char dir[], char *args[]);
 int findInFile(char dir[], char keyword[]);
@@ -109,7 +109,6 @@ int main(void)
 				saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct);
 				continue;
 			}
-			
 			
 	    child = fork();
 			if(child == 0) 
