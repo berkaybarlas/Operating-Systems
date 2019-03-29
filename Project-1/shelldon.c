@@ -119,12 +119,6 @@ int main(void)
       child = fork();
       if (child == 0)
       {
-        if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
-        {
-          char tempBuffer[83] = "/bin/";
-          strcat(tempBuffer, args[0]);
-          strcpy(args[0], tempBuffer);
-        }
         if (strcmp(args[0], "codesearch") == 0)
         {
           codesearch(".", args);
@@ -132,9 +126,16 @@ int main(void)
         else if (strcmp(args[0], "birdakika") == 0)
         {
           oneMinSong(args);
+          printf("birdakika");
         }
         else
         {
+          if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
+          {
+            char tempBuffer[83] = "/bin/";
+            strcat(tempBuffer, args[0]);
+            strcpy(args[0], tempBuffer);
+          }
           redirect(args, outFile); //checking and doing redirection
           status = execv(args[0], args);
           printf("Failed to find executable\n");
@@ -409,6 +410,7 @@ int oneMinSong(char *args[])
 {
   int hour = 0;
   int min = 0;
+  pid_t child;
 
   if (args[2] == NULL)
   {
@@ -429,11 +431,22 @@ int oneMinSong(char *args[])
   fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, args[2]);
   fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min + 1, hour);
   fclose(file_ptr);
-  char *cronArgs[2];
-  strcpy(cronArgs[0], "crontab"); // send temp to cron
-  strcpy(cronArgs[1], "./temp");
-  execvp(cronArgs[0], cronArgs);
-  //remove temp
+  
+
+  int childStatus;
+  child = fork();
+  if(child == 0) {
+    char *cronArgs[] = {
+      "/usr/bin/crontab",
+      "temp",
+      0
+    };
+    execv(cronArgs[0], cronArgs);
+  } else {
+    waitpid(child, &childStatus, 0);
+  }
+  remove("temp"); //remove temp
+  //printf("Removed file %d\n",childStatus);
   return 0;
 }
 
