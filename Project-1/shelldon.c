@@ -126,7 +126,6 @@ int main(void)
         else if (strcmp(args[0], "birdakika") == 0)
         {
           oneMinSong(args);
-          printf("birdakika");
         }
         else
         {
@@ -432,7 +431,7 @@ int oneMinSong(char *args[])
   fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min + 1, hour);
   fclose(file_ptr);
   
-
+  // Create a child and call crontab 
   int childStatus;
   child = fork();
   if(child == 0) {
