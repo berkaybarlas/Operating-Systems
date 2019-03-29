@@ -23,7 +23,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #define HIST_LENGTH		 10 // Number of args to be stored in history
 
 //int parseCommand(char inputBuffer[], char *args[],int *background);
-void checkRedirection(char *args[], int *redirect, char outFile[]);
+
 int codesearch(char dir[], char *args[]);
 int findInFile(char dir[], char keyword[]);
 int oneMinSong(char *args[]);
@@ -112,41 +112,24 @@ int main(void)
 			
 	    child = fork();
 			if(child == 0) 
-			{ 
-        if(strcmp(args[0], "codesearch") == 0) 
-        {
-          codesearch(".",args);
-        }
-        else
-        if(strcmp(args[0], "birdakika") == 0) 
-        {
-          oneMinSong(args);
-        }
-        else 
-        {
-          checkRedirection(args, &redirect, outFile); //checking for redirection
-          if(redirect != 0)
-          {
-            int fd;
-            if(redirect == 1)
-            {
-              fd = open(outFile, O_CREAT | O_RDWR | O_TRUNC, 00644);
-            }
-            else if(redirect == 2)
-            {
-              fd = open(outFile, O_CREAT | O_RDWR | O_APPEND, 00644);
-            }
-            if (fd < 0)
-            { 
-              printf("Failed to create output file");
-              return 2;
-            }
-            dup2 (fd, STDOUT_FILENO);
-          }
-          status = execvp(args[0], args);
-          printf("Failed to find executable\n");
-          return 0;
-        }
+			{
+                if(strcmp(args[0], "codesearch") == 0) 
+                {
+                  codesearch(".",args);
+                }
+                else
+                if(strcmp(args[0], "birdakika") == 0) 
+                {
+                  oneMinSong(args);
+                } 
+                else
+                {
+				redirect(args, outFile); //checking and doing redirection
+   	  	
+				status = execvp(args[0], args);
+				printf("Failed to find executable\n");
+                }
+				return 0;
 			}
 			else if(background == 0)
 			{
