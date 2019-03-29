@@ -24,9 +24,10 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 int parseCommand(char inputBuffer[], char *args[], int *argct, int *background);
 int redirect(char *args[], char outFile[]);
 void saveHistory(char inputBuffer[], char *args[], char *argsHistory[][MAX_LINE/2 + 1], 
-										char buffersHistory[][MAX_LINE], int argct);
+										char buffersHistory[][MAX_LINE], int argct, int background);
 void printHistory(int counter, char *argsHistory[][MAX_LINE/2 + 1]);
-void executeFromHistory(int n, char *args[], char *argsHistory[][MAX_LINE/2 + 1]);
+void executeFromHistory(int n, char *args[], char *argsHistory[][MAX_LINE/2 + 1], 
+													int *background);
 
 int main(void)
 {
@@ -45,7 +46,7 @@ int main(void)
     background = 0;
     int argct = 0;	// number of separate arguments in current args, including NULL
 		
-		bool tempFilled = true;
+		bool tempFilled = false;
 		char *temp[MAX_LINE/2 + 1]; //Temp args holder to help save !X commands
 		
 		/* get next command */
@@ -73,7 +74,9 @@ int main(void)
 					printf("No commands in history.\n");
 					continue;
 				}
-				executeFromHistory(0, args, argsHistory);
+				memcpy(temp, args, MAX_LINE/2 + 1);	
+				tempFilled = true;
+				executeFromHistory(0, args, argsHistory, &background);
 			}
 			else if(args[0][0] == '!')
 			{
@@ -94,46 +97,68 @@ int main(void)
 						continue;
 					}
 					memcpy(temp, args, MAX_LINE/2 + 1);	
-					executeFromHistory(historyInd, args, argsHistory);
+					tempFilled = true;
+					executeFromHistory(historyInd, args, argsHistory, &background);
 				}
 			}
 			if(strcmp(args[0], "history") == 0)
 			{
 				printHistory(counter, argsHistory);
-				saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct);
+				saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
 				continue;
 			}
-			
 			
 	    child = fork();
 			if(child == 0) 
 			{
+				if(args[0]!=NULL && strncmp(args[0], "./", 2) != 0)
+				{
+					char tempBuffer[83] = "/bin/";
+					strcat(tempBuffer, args[0]);
+					strcpy(args[0], tempBuffer);
+				}
 				redirect(args, outFile); //checking and doing redirection
-   	  	
-				status = execvp(args[0], args);
+				status = execv(args[0], args);
 				printf("Failed to find executable\n");
 				return 0;
 			}
-			else if(background == 0)
+			if(background == 0)
 			{
-				//Save args pointers and input buffer into history
-				if(tempFilled)
-				{
-					memcpy(args, temp, MAX_LINE/2 + 1);	
-				}
-				saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct);
 				int childStatus;
 				waitpid(child, &childStatus, 0);
 			}
+			//Save args pointers and input buffer into history
+			if(tempFilled)
+			{
+				memcpy(args, temp, MAX_LINE/2 + 1);
+				background = 0;
+			}
+			saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
   	}
+  	waitpid(-1, NULL, WNOHANG);
   }
   wait(NULL);
   return 0;
 }
 
-void executeFromHistory(int n, char *args[], char *argsHistory[][MAX_LINE/2 + 1])
+void executeFromHistory(int n, char *args[], char *argsHistory[][MAX_LINE/2 + 1],
+												int *background)
 {
 	memcpy(args, argsHistory[n], MAX_LINE/2 + 1);
+	for(int i = 0; i < MAX_LINE/2 + 1; i++)
+	{
+		if(args[i]!= NULL)
+		{
+			if(strcmp(args[i], "&") == 0)
+			{
+				args[i] = NULL;
+				*background = 1;
+			}
+		}
+		else{
+			break;
+		}
+	}
 }
 
 void printHistory(int counter, char *argsHistory[][MAX_LINE/2 + 1])
@@ -159,8 +184,15 @@ void printHistory(int counter, char *argsHistory[][MAX_LINE/2 + 1])
 
 //Saves history
 void saveHistory(char inputBuffer[], char *args[], char *argsHistory[][MAX_LINE/2 + 1], 
-										char buffersHistory[][MAX_LINE], int argct)
+										char buffersHistory[][MAX_LINE], int argct, int background)
 {
+	if(background == 1)
+	{
+		char *bgArg = args[argct - 2] + strlen(args[argct - 2]) + 1;
+		args[argct - 1] = bgArg;
+		args[argct] = NULL;
+		argct += 1;
+	}
 	for(int i = HIST_LENGTH - 1; i > 0; i--)
 	{
 		memcpy(buffersHistory[i], buffersHistory[i - 1], MAX_LINE);
@@ -175,10 +207,17 @@ void saveHistory(char inputBuffer[], char *args[], char *argsHistory[][MAX_LINE/
 	}
 	memcpy(buffersHistory[0], inputBuffer, MAX_LINE);
 	argsHistory[0][0] = buffersHistory[0];
-	for(int i = 1; i < argct; i++)
+	for(int i = 1; i < MAX_LINE/2 + 1; i++)
 	{
-		int ptrdif = args[i] - args[0];
-		argsHistory[0][i] = argsHistory[0][0] + ptrdif;
+		if(args[i] != NULL)
+		{
+			int ptrdif = args[i] - args[0];
+			argsHistory[0][i] = argsHistory[0][0] + ptrdif;
+		}
+		else
+		{
+			argsHistory[0][i] = NULL;
+		}
 	}
 }
 
@@ -319,8 +358,8 @@ int parseCommand(char inputBuffer[], char *args[], int *argct, int *background)
 
 	args[ct] = NULL; /* just in case the input line was > 80 */
 
-	*argct = ct;
-	*argct++;
+	*argct = ct + 1;
+	
 	return 1;
 
 } /* end of parseCommand routine */
