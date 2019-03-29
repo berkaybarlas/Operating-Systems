@@ -15,29 +15,32 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #include <string.h>
 #include <fcntl.h>
 
-
 #define MAX_LINE       80 /* 80 chars per line, per command, should be enough. */
+#define HIST_LENGTH		 10
 
-int parseCommand(char inputBuffer[], char *args[],int *background);
+int parseCommand(char inputBuffer[], char *args[], int *argct, int *background);
 void checkRedirection(char *args[], int *redirect, char outFile[]);
 
 int main(void)
 {
-  char inputBuffer[MAX_LINE]; 	        /* buffer to hold the command entered */
-  int background;             	        /* equals 1 if a command is followed by '&' */
- 	int redirect;											/* equals 1 if redirect with trunc, 2 if append*/
- 	char outFile[MAX_LINE];						/* 80 chars to hold the output file with path.*/
+  char inputBuffer[MAX_LINE]; 	      /* buffer to hold the command entered */
+  int background;             	      /* equals 1 if a command is followed by '&' */
+	int redirect;												/* equals 1 if redirect with trunc, 2 if append*/
+ 	char outFile[MAX_LINE];							/* 80 chars to hold the output file with path.*/
   char *args[MAX_LINE/2 + 1];	        /* command line (of 80) has max of 40 arguments */
-  pid_t child;            		/* process id of the child process */
-  int status;           		/* result from execv system call*/
+  char *argsHistory[HIST_LENGTH][MAX_LINE/2 + 1];// Saves ptrs to args in buffersHistory
+  char buffersHistory[HIST_LENGTH][MAX_LINE];	// Saves copies of inputBuffers
+  int counter = 1;										// Keeps track of lines of input taken so far
+  pid_t child;            						/* process id of the child process */
+  int status;           							/* result from execv system call*/
   int shouldrun = 1;
-	
-  int i, upper;
 		
   while (shouldrun){            		/* Program terminates normally inside setup */
     background = 0;
+    int argct = 0;	// number of separate arguments in current args, including NULL
 		
-    shouldrun = parseCommand(inputBuffer,args,&background);       /* get next command */
+		/* get next command */
+    shouldrun = parseCommand(inputBuffer, args, &argct, &background);
 				
     if (strncmp(inputBuffer, "exit", 4) == 0)
     {
@@ -51,7 +54,27 @@ int main(void)
 			(2) the child process will invoke execv()
 			(3) if command included &, parent will invoke wait()
        */
-
+			
+			//Save args pointers and input buffer into history
+			for(int i = HIST_LENGTH - 1; i > 0; i--)
+			{
+				memcpy(buffersHistory[i], buffersHistory[i - 1], MAX_LINE);
+				memcpy(argsHistory[i], argsHistory[i - 1], MAX_LINE/2 + 1);
+				for(int j = 0; j < MAX_LINE/2 + 1; j++)
+				{
+					if(argsHistory[i][j] != NULL)
+					{
+						argsHistory[i][j] += buffersHistory[i] - buffersHistory[i - 1];
+					}
+				}
+			}
+			memcpy(buffersHistory[0], inputBuffer, MAX_LINE);
+			argsHistory[0][0] = buffersHistory[0];
+			for(int i = 1; i < argct; i++)
+			{
+				int ptrdif = args[i] - args[0];
+				argsHistory[0][i] = argsHistory[0][0] + ptrdif;
+			}
       
 	    child = fork();
 			if(child == 0) 
@@ -62,11 +85,11 @@ int main(void)
     	  	int fd;
     	  	if(redirect == 1)
     	  	{
-    	  		fd = open(outFile, O_CREAT | O_RDWR | O_TRUNC, 00644);
+    	  		fd = open(outFile, O_CREAT | O_RDWR | O_TRUNC, 0644);
     	  	}
     	  	else if(redirect == 2)
     	  	{
-    	  		fd = open(outFile, O_CREAT | O_RDWR | O_APPEND, 00644);
+    	  		fd = open(outFile, O_CREAT | O_RDWR | O_APPEND, 0644);
     	  	}
       		if (fd < 0)
       		{ 
@@ -74,6 +97,7 @@ int main(void)
       			return 2;
       		}
       		dup2 (fd, STDOUT_FILENO);
+      		close(fd);
       	}
 				status = execvp(args[0], args);
 				printf("Failed to find executable\n");
@@ -100,14 +124,14 @@ void checkRedirection(char *args[], int *redirect, char outFile[])
   		*redirect = 1;
   		strcpy(outFile, args[i+1]);
   		args[i] = NULL;
-  		break;
+  		return;
   	}
   	else if(strcmp(args[i], ">>") == 0)
   	{
   		*redirect = 2;
   		strcpy(outFile, args[i+1]);
   		args[i] = NULL;
-  		break;
+  		return;
   	}
   	i++;
 	}
@@ -121,7 +145,7 @@ void checkRedirection(char *args[], int *redirect, char outFile[])
  * will become null-terminated, C-style strings. 
  */
 
-int parseCommand(char inputBuffer[], char *args[],int *background)
+int parseCommand(char inputBuffer[], char *args[], int *argct, int *background)
 {
     int length,		/* # of characters in the command line */
       i,		/* loop index for accessing inputBuffer array */
@@ -130,7 +154,7 @@ int parseCommand(char inputBuffer[], char *args[],int *background)
       command_number;	/* index of requested command number */
     
     ct = 0;
-	
+    	
     /* read what the user enters on the command line */
     do {
 	  printf("shelldon>");
@@ -208,6 +232,8 @@ int parseCommand(char inputBuffer[], char *args[],int *background)
     
     args[ct] = NULL; /* just in case the input line was > 80 */
     
+    *argct = ct;
+    *argct++;
     return 1;
     
 } /* end of parseCommand routine */
