@@ -36,39 +36,14 @@ int main(void)
   int shouldrun = 1;
 	
   int i, upper;
-		
-  while (shouldrun){            		/* Program terminates normally inside setup */
-    background = 0;
-		
-    shouldrun = parseCommand(inputBuffer,args,&background);       /* get next command */
-				
-    if (strncmp(inputBuffer, "exit", 4) == 0)
-    {
-      shouldrun = 0;     /* Exiting from shelldon*/
-    }
-    
-    if (shouldrun) {
-      /*
-			After reading user input, the steps are 
-			(1) Fork a child process using fork()
-			(2) the child process will invoke execv()
-			(3) if command included &, parent will invoke wait()
-       */
-
-	    child = fork();
-			if(child == 0) 
-			{
-				oneMinSong(args);
-				return 0;
-			}
-			else if(background == 0)
-			{
-				int childStatus;
-				waitpid(child, &childStatus, 0);
-			}
-  	}
-  }
-  wait(NULL);
+		char buf[MAX_LINE];
+    getcwd(buf,1024);
+    char temp[MAX_LINE];
+    strcpy(temp,buf);
+    printf("Test:%s\n",temp);
+  
+  //strcpy(cronArgs[0], ""); // send temp to cron
+  //strcpy(cronArgs[1], "a");
   return 0;
 }
 
