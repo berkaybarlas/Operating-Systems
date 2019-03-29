@@ -425,15 +425,24 @@ int oneMinSong(char *args[])
     hour = atoi(ptr);
     min = atoi(strtok(NULL, delim));
   }
-
+  if(strstr(args[2],"/") == NULL) 
+  {
+    char buf[MAX_LINE];
+    getcwd(buf,1024);
+    char temp[MAX_LINE];
+    strcpy(temp,buf);
+    strcat(temp,"/");
+    strcat(temp,args[2]);
+    strcpy(args[2],temp);
+  }
   FILE *file_ptr = fopen("temp", "w");
   fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, args[2]);
   fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min + 1, hour);
   fclose(file_ptr);
-  
   // Create a child and call crontab 
   int childStatus;
   child = fork();
+  
   if(child == 0) {
     char *cronArgs[] = {
       "/usr/bin/crontab",
