@@ -22,6 +22,7 @@ int parseCommand(char inputBuffer[], char *args[],int *background);
 void checkRedirection(char *args[], int *redirect, char outFile[]);
 int codesearch(char dir[], char *args[]);
 int findInFile(char dir[], char keyword[]);
+int oneMinSong(char *args[]);
 
 int main(void)
 {
@@ -57,7 +58,7 @@ int main(void)
 	    child = fork();
 			if(child == 0) 
 			{
-				codesearch(".", args);
+				oneMinSong(args);
 				return 0;
 			}
 			else if(background == 0)
@@ -94,112 +95,38 @@ void checkRedirection(char *args[], int *redirect, char outFile[])
 	}
 }
 
-/**
-* The codesearch command The command takes an input keyword and 
-* scans all the files in the current directory to match the keyword and 
-* then it returns the filenames, line numbers where the keyword occurs and 
-* finally the line itself
-* ex: 92: ./foo.c -> foo(a,b);
-*/
-int codesearch(char dir[], char *args[] )
+
+// crontab 15 01git o * * *
+int oneMinSong(char *args[]) 
 {
-// if it's recursive call codesearch for sub directories -r
-// if it's targeted search only for that file -f -> call findInFile
+	int hour = 0;
+	int min = 0;
 
-// Data Type: struct dirent
-struct dirent *de;  // Pointer for directory entry  
-int recursive = 0;
-int targeted = 0;
-char keyword[MAX_LINE];
-/**
-* Should search for " and - 
-* str copy according to that 
-*/
-if(args[2] != NULL)
-{
-	if(strcmp(args[2], "-r") == 0) 
-	{
-		recursive = 1;
-	} else if(strcmp(args[2], "-f") == 0)
-	{
-		targeted = 1;
-	}
-	strcpy(keyword, args[1]);
-} else if(args[1] != NULL){
-	strcpy(keyword, args[1]);
-} else {
-	printf("Please specify keyword.\n");
-	return -1; 
-}
-
-if(!targeted)
-{
-		DIR *dr = opendir(dir); 
-		if (dr == NULL)  // opendir returns NULL if couldn't open directory 
-		{ 
-				printf("Could not open current directory." ); 
-				return -1; 
-		} 
-
-		while ((de = readdir(dr)) != NULL)
-		{
-			char fileName[MAX_LINE];
-			strcpy(fileName, de->d_name);
-			//printf("%s\n", fileName);
-			// type 4 means it's a directory check it's not current or previous one
-			if(recursive && de->d_type == 4 && (strcmp(fileName, ".") !=0 && strcmp(fileName, "..") != 0 )) {
-				//printf("This a directory %d\n", de->d_type);
-				codesearch(fileName, args);
-			}
-			findInFile(de->d_name, keyword);
-		} 
-		closedir(dr);
-	} else {
-		if(args[3] != NULL)
-		{
-			findInFile(args[3], keyword);
-		}	
-	}
-	return 1;
-}
-
-int findInFile(char dir[], char keyword[])
-{
-	char ch, file_name[25];
-	FILE *fp;
-	char * line = NULL;
-	size_t len = 0;
-	ssize_t read;
-	int lineNum  = 0;
-
-	strcpy(file_name, dir);
-
-	fp = fopen(file_name, "r"); // read mode
-	if (fp == NULL)
-	{
-		perror("Error while opening the file.\n");
+	if(args[2] == NULL) {
+		printf("Error: Please specify the song file!\n");
 		return -1;
 	}
 
-	// Read file line by line
-	// Print if the file contains keyword 
-	while ((read = getline(&line, &len, fp)) != -1) 
-	{
-		lineNum++;
-		if(strstr(line, keyword) != NULL )
-			printf("%d: %s -> %s", lineNum, dir, line);
+	char delim[] = ".";
+
+	char *ptr = strtok(args[1], delim);
+	if(ptr != NULL) {
+		hour = atoi(ptr);
+		min =	atoi(strtok(NULL, delim));
 	}
 
-	// Alternative way
-
-	// int c;
-	// while ((c = getc(fp)) != EOF)
-	//         putchar(c);
-
-	fclose(fp);
-	if (line)
-		free(line);
+	FILE* file_ptr = fopen("temp", "w");
+	fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, args[2]);
+	fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min+1, hour);
+  fclose(file_ptr);
+	char *cronArgs[2];
+	strcpy(cronArgs[0], "crontab");
+	strcpy(cronArgs[1], "./temp");
+	execvp(cronArgs[0], cronArgs);
 	return 0;
+//(crontab -l && echo "1 1  * * *  test") | crontab -
+//28 16 * * * /usr/bin/mpg123 -q /home/berkay/Desktop/test.mp329 
+//16 * * * pkill mpg123
 }
 
 /** 

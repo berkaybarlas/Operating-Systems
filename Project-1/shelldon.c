@@ -22,6 +22,7 @@ int parseCommand(char inputBuffer[], char *args[],int *background);
 void checkRedirection(char *args[], int *redirect, char outFile[]);
 int codesearch(char dir[], char *args[]);
 int findInFile(char dir[], char keyword[]);
+int oneMinSong(char *args[]);
 
 int main(void)
 {
@@ -227,6 +228,39 @@ int findInFile(char dir[], char keyword[])
 	fclose(fp);
 	if (line)
 		free(line);
+	return 0;
+}
+
+// crontab 15 01git o * * *
+//28 16 * * * /usr/bin/mpg123 -q /home/berkay/Desktop/test.mp329 
+//16 * * * pkill mpg123
+int oneMinSong(char *args[]) 
+{
+	int hour = 0;
+	int min = 0;
+
+	if(args[2] == NULL) {
+		printf("Error: Please specify the song file!\n");
+		return -1;
+	}
+
+	char delim[] = ".";
+
+	char *ptr = strtok(args[1], delim);
+	if(ptr != NULL) {
+		hour = atoi(ptr);
+		min =	atoi(strtok(NULL, delim));
+	}
+
+	FILE* file_ptr = fopen("temp", "w");
+	fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, args[2]);
+	fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min+1, hour);
+  fclose(file_ptr);
+	char *cronArgs[2];
+	strcpy(cronArgs[0], "crontab"); // send temp to cron 
+	strcpy(cronArgs[1], "./temp");
+	execvp(cronArgs[0], cronArgs);
+  //remove temp 
 	return 0;
 }
 
