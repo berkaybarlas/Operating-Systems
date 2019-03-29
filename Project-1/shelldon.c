@@ -258,6 +258,7 @@ int redirect(char *args[], char outFile[])
 		dup2 (fd, STDOUT_FILENO);
 		close(fd);
 	}
+  return 0;
 }
 
 /**
