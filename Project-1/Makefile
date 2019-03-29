@@ -1,4 +1,6 @@
 gcc:
-	gcc -o shelldon shelldon.c
+	gcc -o shelldon.o shelldon.c
 shell:
-	gcc -o shelldon shelldon.c && ./shelldon
+	gcc -o shelldon.o shelldon.c && ./shelldon.o
+testo: 
+	gcc -o test.o test.c && ./test.o

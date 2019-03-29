@@ -14,6 +14,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #include <sys/wait.h>
 #include <string.h>
 #include <fcntl.h>
+#include <dirent.h>  // directory lib
 #include <stddef.h>
 #include <string.h>
 #include <stdbool.h> 
@@ -21,6 +22,11 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #define MAX_LINE       80 /* 80 chars per line, per command, should be enough. */
 #define HIST_LENGTH		 10 // Number of args to be stored in history
 
+//int parseCommand(char inputBuffer[], char *args[],int *background);
+void checkRedirection(char *args[], int *redirect, char outFile[]);
+int codesearch(char dir[], char *args[]);
+int findInFile(char dir[], char keyword[]);
+int oneMinSong(char *args[]);
 int parseCommand(char inputBuffer[], char *args[], int *argct, int *background);
 int redirect(char *args[], char outFile[]);
 void saveHistory(char inputBuffer[], char *args[], char *argsHistory[][MAX_LINE/2 + 1], 
@@ -104,15 +110,43 @@ int main(void)
 				continue;
 			}
 			
-			
 	    child = fork();
 			if(child == 0) 
-			{
-				redirect(args, outFile); //checking and doing redirection
-   	  	
-				status = execvp(args[0], args);
-				printf("Failed to find executable\n");
-				return 0;
+			{ 
+        if(strcmp(args[0], "codesearch") == 0) 
+        {
+          codesearch(".",args);
+        }
+        else
+        if(strcmp(args[0], "birdakika") == 0) 
+        {
+          oneMinSong(args);
+        }
+        else 
+        {
+          checkRedirection(args, &redirect, outFile); //checking for redirection
+          if(redirect != 0)
+          {
+            int fd;
+            if(redirect == 1)
+            {
+              fd = open(outFile, O_CREAT | O_RDWR | O_TRUNC, 00644);
+            }
+            else if(redirect == 2)
+            {
+              fd = open(outFile, O_CREAT | O_RDWR | O_APPEND, 00644);
+            }
+            if (fd < 0)
+            { 
+              printf("Failed to create output file");
+              return 2;
+            }
+            dup2 (fd, STDOUT_FILENO);
+          }
+          status = execvp(args[0], args);
+          printf("Failed to find executable\n");
+          return 0;
+        }
 			}
 			else if(background == 0)
 			{
@@ -227,6 +261,146 @@ int redirect(char *args[], char outFile[])
   return 0;
 }
 
+/**
+* The codesearch command The command takes an input keyword and 
+* scans all the files in the current directory to match the keyword and 
+* then it returns the filenames, line numbers where the keyword occurs and 
+* finally the line itself
+* ex: 92: ./foo.c -> foo(a,b);
+*/
+int codesearch(char dir[], char *args[] )
+{
+// if it's recursive call codesearch for sub directories -r
+// if it's targeted search only for that file -f -> call findInFile
+
+// Data Type: struct dirent
+struct dirent *de;  // Pointer for directory entry  
+int recursive = 0;
+int targeted = 0;
+char keyword[MAX_LINE];
+/**
+* Should search for " and - 
+* str copy according to that 
+*/
+if(args[2] != NULL)
+{
+	if(strcmp(args[2], "-r") == 0) 
+	{
+		recursive = 1;
+	} else if(strcmp(args[2], "-f") == 0)
+	{
+		targeted = 1;
+	}
+	strcpy(keyword, args[1]);
+} else if(args[1] != NULL){
+	strcpy(keyword, args[1]);
+} else {
+	printf("Please specify keyword.\n");
+	return -1; 
+}
+
+if(!targeted)
+{
+		DIR *dr = opendir(dir); 
+		if (dr == NULL)  // opendir returns NULL if couldn't open directory 
+		{ 
+				printf("Could not open current directory." ); 
+				return -1; 
+		} 
+
+		while ((de = readdir(dr)) != NULL)
+		{
+			char fileName[MAX_LINE];
+			strcpy(fileName, de->d_name);
+			//printf("%s\n", fileName);
+			// type 4 means it's a directory check it's not current or previous one
+			if(recursive && de->d_type == 4 && (strcmp(fileName, ".") !=0 && strcmp(fileName, "..") != 0 )) {
+				//printf("This a directory %d\n", de->d_type);
+				codesearch(fileName, args);
+			}
+			findInFile(de->d_name, keyword);
+		} 
+		closedir(dr);
+	} else {
+		if(args[3] != NULL)
+		{
+			findInFile(args[3], keyword);
+		}	
+	}
+	return 1;
+}
+
+int findInFile(char dir[], char keyword[])
+{
+	char ch, file_name[25];
+	FILE *fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	int lineNum  = 0;
+
+	strcpy(file_name, dir);
+
+	fp = fopen(file_name, "r"); // read mode
+	if (fp == NULL)
+	{
+		perror("Error while opening the file.\n");
+		return -1;
+	}
+
+	// Read file line by line
+	// Print if the file contains keyword 
+	while ((read = getline(&line, &len, fp)) != -1) 
+	{
+		lineNum++;
+		if(strstr(line, keyword) != NULL )
+			printf("%d: %s -> %s", lineNum, dir, line);
+	}
+
+	// Alternative way
+
+	// int c;
+	// while ((c = getc(fp)) != EOF)
+	//         putchar(c);
+
+	fclose(fp);
+	if (line)
+		free(line);
+	return 0;
+}
+
+// crontab 15 01git o * * *
+//28 16 * * * /usr/bin/mpg123 -q /home/berkay/Desktop/test.mp329 
+//16 * * * pkill mpg123
+int oneMinSong(char *args[]) 
+{
+	int hour = 0;
+	int min = 0;
+
+	if(args[2] == NULL) {
+		printf("Error: Please specify the song file!\n");
+		return -1;
+	}
+
+	char delim[] = ".";
+
+	char *ptr = strtok(args[1], delim);
+	if(ptr != NULL) {
+		hour = atoi(ptr);
+		min =	atoi(strtok(NULL, delim));
+	}
+
+	FILE* file_ptr = fopen("temp", "w");
+	fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, args[2]);
+	fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min+1, hour);
+  fclose(file_ptr);
+	char *cronArgs[2];
+	strcpy(cronArgs[0], "crontab"); // send temp to cron 
+	strcpy(cronArgs[1], "./temp");
+	execvp(cronArgs[0], cronArgs);
+  //remove temp 
+	return 0;
+}
 
 /** 
  * The parseCommand function below will not return any value, but it will just: read
