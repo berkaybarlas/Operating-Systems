@@ -1,6 +1,6 @@
 /*
  * shelldon interface program
-
+COMP 304 Spring 2019 Project-1
 KUSIS ID: 60210 PARTNER NAME: Ege Onat Özsüer
 KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 
@@ -21,7 +21,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 
 #define MAX_LINE 80    /* 80 chars per line, per command, should be enough. */
 #define HIST_LENGTH 10 // Number of args to be stored in history
-
+#define MODULE "oldestchild"
 //int parseCommand(char inputBuffer[], char *args[],int *background);
 
 int codesearch(char dir[], char *args[]);
@@ -34,6 +34,8 @@ void saveHistory(char inputBuffer[], char *args[], char *argsHistory[][MAX_LINE 
 void printHistory(int counter, char *argsHistory[][MAX_LINE / 2 + 1]);
 void executeFromHistory(int n, char *args[], char *argsHistory[][MAX_LINE / 2 + 1],
                         int *background);
+int oldestChild(char *args[], int *previousPid);
+void closeShelldon();
 
 int main(void)
 {
@@ -47,6 +49,7 @@ int main(void)
   pid_t child;                                      /* process id of the child process */
   int status;                                       /* result from execv system call*/
   int shouldrun = 1;
+  int previousPid = 10;
 
   while (shouldrun)
   { /* Program terminates normally inside setup */
@@ -62,6 +65,7 @@ int main(void)
     if (strncmp(inputBuffer, "exit", 4) == 0)
     {
       shouldrun = 0; /* Exiting from shelldon*/
+      closeShelldon();
     }
 
     if (shouldrun)
@@ -123,6 +127,10 @@ int main(void)
         {
           codesearch(".", args);
         }
+        else if (strcmp(args[0], "oldestchild") == 0)
+        {
+          oldestChild(args, &previousPid);
+        }
         else if (strcmp(args[0], "birdakika") == 0)
         {
           oneMinSong(args);
@@ -158,6 +166,23 @@ int main(void)
   }
   wait(NULL);
   return 0;
+}
+
+void closeShelldon() {
+  pid_t child;
+  child = fork();
+  int childStatus;
+  if(child == 0) {
+    char *rmModArgs[] = {
+      "/usr/bin/sudo",
+      "rmmod",
+      MODULE,
+      0
+    };
+   execv(rmModArgs[0], rmModArgs);
+  } else {
+    printf("Good bye...\n");
+  }
 }
 
 void executeFromHistory(int n, char *args[], char *argsHistory[][MAX_LINE / 2 + 1],
@@ -455,6 +480,56 @@ int oneMinSong(char *args[])
   }
   remove("temp"); //remove temp
   //printf("Removed file %d\n",childStatus);
+  return 0;
+}
+
+int oldestChild(char *args[], int *previousPid) {
+  pid_t child;
+  int pid;
+  
+  
+  if(args[1] == NULL) {
+    printf("Please indicate processID!\n");
+    return -1;
+  }
+  pid = atoi(args[1]);
+  if(*previousPid == pid) {
+    printf("Please indicate processID!\n");
+    return -1;
+  }
+  *previousPid = pid;
+  
+
+  child = fork();
+  int childStatus;
+  if(child == 0) {
+    char *rmModArgs[] = {
+      "/usr/bin/sudo",
+      "rmmod",
+      MODULE,
+      0
+    };
+    execv(rmModArgs[0], rmModArgs);
+  } else {
+    waitpid(child, &childStatus, 0);
+    if(childStatus < 0)
+      printf("Error during rmmode !\n");
+    
+    char processID[32];
+    sprintf(processID, "processID=%d", pid);
+    char *insModArgs[] = {
+      "/usr/bin/sudo",
+      "insmod",
+      "oldestChild.ko",
+      processID,
+      0
+    };
+    int status = 0;
+    execv(insModArgs[0], insModArgs);
+    if (status < 0) {
+      printf("Error during insmod\n");
+    }
+  }
   return 0;
 }
 
