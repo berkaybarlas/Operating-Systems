@@ -113,13 +113,23 @@ int main(void)
           executeFromHistory(historyInd, args, argsHistory, &background);
         }
       }
+      
       if (strcmp(args[0], "history") == 0)
       {
         printHistory(counter, argsHistory);
         saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
         continue;
       }
-      
+      if (strcmp(args[0], "cd") == 0)
+      {
+      	int cdresult = chdir(args[1]);
+      	if(cdresult != 0)
+      	{
+      		printf("Could not change directory.");
+      	}
+      	saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
+      	continue;
+      }
       if (strcmp(args[0], "codesearch") == 0)
       {
         codesearch(".", args);
@@ -338,7 +348,7 @@ int codesearch(char dir[], char *args[])
 */
   if (args[2] != NULL)
   {
-    if(strstr(args[2],"-") == NULL) 
+    if(strstr(args[2],"-") != NULL) 
     {
         if (strcmp(args[2], "-r") == 0)
       {
@@ -350,8 +360,7 @@ int codesearch(char dir[], char *args[])
       }
       strcpy(keyword, args[1]);
     } 
-    else
-    if(strstr(args[1],"-") == NULL) 
+    else if(strstr(args[1],"-") != NULL) 
     {
         if (strcmp(args[1], "-r") == 0)
       {
@@ -474,7 +483,6 @@ int oneMinSong(char *args[])
   int min = 0;
   pid_t child;
   char temp[MAX_LINE];
-  char tempTime[MAX_LINE];
 
   if (args[2] == NULL)
   {
@@ -483,8 +491,8 @@ int oneMinSong(char *args[])
   }
 
   char delim[] = ".";
-  strcpy(tempTime,args[1]);
-  char *ptr = strtok(tempTime, delim);
+
+  char *ptr = strtok(args[1], delim);
   if (ptr != NULL)
   {
     hour = atoi(ptr);
