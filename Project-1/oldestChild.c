@@ -34,7 +34,9 @@ static int custom_module_init(void) {
 		task = pid_task(pid_struct, PIDTYPE_PID);
 
 		//If no process ID is provided or the process ID is invalid, print an error message to kernel log.
-
+		if(task == NULL) {
+			printk(KERN_ERR "Provided process ID is invalid!\n");
+		}
 		printk(KERN_INFO "PID: [%d]\n", task->pid);
 		printk(KERN_INFO "Parent PID: [%d]\n", (task->parent)->pid);
 		printk(KERN_INFO "Process Start time: [%d]\n", task->start_time);
@@ -64,7 +66,7 @@ void oldestchild(struct task_struct *t) {
 		}
 		oldestchild(temp_task);
 	}
-	if(*oldestProcess != NULL) {
+	if(oldestProcess != NULL) {
 		printk(KERN_INFO "\tOldest Child of [%d] PID: [%d]\n",(temp_task->parent)->pid,temp_task->pid);
 		printk(KERN_INFO "\tOldest Child of [%d] Start time: [%d]\n",(temp_task->parent)->pid ,temp_task->start_time);
 		printk(KERN_INFO "\tOldest Child of [%d] Executable Name: [%s]\n",(temp_task->parent)->pid ,temp_task->comm);
