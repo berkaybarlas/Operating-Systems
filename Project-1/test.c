@@ -38,21 +38,45 @@ int main(void)
 	int pid = 4;
 	int previousPid = 10;
   char processID[32];
-    sprintf(processID, "processID=%d", pid);
+    sprintf(processID, "\"processID\"=%d", pid);
     char *insModArgs[] = {
       "/usr/bin/sudo",
       "mkdir",
       MODULE,
       0
     };
-    printf("Test:%s\n",insModArgs[3]);
-		execv(insModArgs[0],insModArgs);
-		
-		printf("previousPid 0:%d !\n", previousPid);
-    
+    printf("Test:%s\n",processID);
+		//xecv(insModArgs[0],insModArgs);
 		test(&previousPid);
-    printf("previousPid 1:%d !\n", previousPid);
+	int index;
+	
+	char *ch = strchr(processID,'\"');
+	if(ch != NULL) {
+		printf("contains quote %s\n",ch+1);
+		// sprintf(processID, "%s",ch+1);
+		// char *ch = strchr(processID,'\"');
+		// int i;
+		// for (i = 0; i < processID[i] != '\0'; i++)
+		// {
+		// 	if(processID[i] == '\"'){
+		// 		processID[i] = '\0';
+		// 	}
+		// }
+		int i;
+		int currentIndex = 0;
+		while(processID[i] != '\0') {
+			if(processID[i] != '\"') {
+				processID[currentIndex++] = processID[i];
+			}
+			i++;
+		}
+		processID[currentIndex] = '\0';
+		printf("new: %s\n",processID);
+	}
 
+	// if(index != NULL){
+
+  //   }
 
   //status = execv(insModArgs[0], insModArgs);
   //strcpy(cronArgs[0], ""); // send temp to cron

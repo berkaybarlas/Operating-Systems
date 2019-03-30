@@ -334,15 +334,31 @@ int codesearch(char dir[], char *args[])
 */
   if (args[2] != NULL)
   {
-    if (strcmp(args[2], "-r") == 0)
+    if(strstr(args[2],"-") == NULL) 
     {
-      recursive = 1;
-    }
-    else if (strcmp(args[2], "-f") == 0)
+        if (strcmp(args[2], "-r") == 0)
+      {
+        recursive = 1;
+      }
+      else if (strcmp(args[2], "-f") == 0)
+      {
+        targeted = 1;
+      }
+      strcpy(keyword, args[1]);
+    } 
+    else
+    if(strstr(args[1],"-") == NULL) 
     {
-      targeted = 1;
-    }
-    strcpy(keyword, args[1]);
+        if (strcmp(args[1], "-r") == 0)
+      {
+        recursive = 1;
+      }
+      else if (strcmp(args[1], "-f") == 0)
+      {
+        targeted = 1;
+      }
+      strcpy(keyword, args[2]);
+    }  
   }
   else if (args[1] != NULL)
   {
@@ -354,12 +370,28 @@ int codesearch(char dir[], char *args[])
     return -1;
   }
 
+  if(strstr(keyword,"\"") == NULL) {
+    printf("Please specify keyword.\n");
+    return -1;
+  }
+printf(" keyword:%s\n",keyword);
+  // remove quotes
+  int i = 0;
+	int currentIndex = 0;
+	while(keyword[i] != '\0') {
+	  if(keyword[i] != '\"') {
+	  	keyword[currentIndex++] = keyword[i];
+	  }
+	  i++;
+	}
+	keyword[currentIndex] = '\0';
+
   if (!targeted)
   {
     DIR *dr = opendir(dir);
     if (dr == NULL) // opendir returns NULL if couldn't open directory
     {
-      printf("Could not open current directory.");
+      printf("Could not open current directory.\n");
       return -1;
     }
 
@@ -383,6 +415,8 @@ int codesearch(char dir[], char *args[])
     if (args[3] != NULL)
     {
       findInFile(args[3], keyword);
+    } else {
+      printf("Please specify target file!\n");
     }
   }
   return 1;
