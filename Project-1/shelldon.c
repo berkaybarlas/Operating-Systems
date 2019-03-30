@@ -474,6 +474,7 @@ int oneMinSong(char *args[])
   int min = 0;
   pid_t child;
   char temp[MAX_LINE];
+  char tempTime[MAX_LINE];
 
   if (args[2] == NULL)
   {
@@ -482,8 +483,8 @@ int oneMinSong(char *args[])
   }
 
   char delim[] = ".";
-
-  char *ptr = strtok(args[1], delim);
+  strcpy(tempTime,args[1]);
+  char *ptr = strtok(tempTime, delim);
   if (ptr != NULL)
   {
     hour = atoi(ptr);
