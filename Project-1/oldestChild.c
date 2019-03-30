@@ -36,9 +36,11 @@ static void custom_module_exit(void) {
 
 void oldestchild(struct task_struct *t) {
 	//If no process ID is provided or the process ID is invalid, print an error message to kernel log.
+
 		struct task_struct *task = t;
 		struct task_struct *temp_task;
-
+		struct list_head *list;
+		
     for_each_process(task) {
 		if (task->pid == processID){
 			printk(KERN_INFO "PID: [%d]\n", task->pid);
