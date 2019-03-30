@@ -5,7 +5,7 @@ shell:
 testo: 
 	gcc -o test.o test.c && ./test.o
 
-obj-m	:= kernelModule.o
+obj-m	:= oldestChild.o
  
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 PWD       := $(shell pwd)

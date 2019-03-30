@@ -17,12 +17,13 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #include <dirent.h>  // directory lib
 
 #define MAX_LINE       80 /* 80 chars per line, per command, should be enough. */
-
+#define MODULE "oldestchild"
 int parseCommand(char inputBuffer[], char *args[],int *background);
 void checkRedirection(char *args[], int *redirect, char outFile[]);
 int codesearch(char dir[], char *args[]);
 int findInFile(char dir[], char keyword[]);
 int oneMinSong(char *args[]);
+void test(int *test);
 
 int main(void)
 {
@@ -34,18 +35,38 @@ int main(void)
   pid_t child;            		/* process id of the child process */
   int status;           		/* result from execv system call*/
   int shouldrun = 1;
-	
-  int i, upper;
-		char buf[MAX_LINE];
-    getcwd(buf,1024);
-    char temp[MAX_LINE];
-    strcpy(temp,buf);
-    printf("Test:%s\n",temp);
-  
+	int pid = 4;
+	int previousPid = 10;
+  char processID[32];
+    sprintf(processID, "processID=%d", pid);
+    char *insModArgs[] = {
+      "/usr/bin/sudo",
+      "mkdir",
+      MODULE,
+      0
+    };
+    printf("Test:%s\n",insModArgs[3]);
+		execv(insModArgs[0],insModArgs);
+		
+		printf("previousPid 0:%d !\n", previousPid);
+    
+		test(&previousPid);
+    printf("previousPid 1:%d !\n", previousPid);
+
+
+  //status = execv(insModArgs[0], insModArgs);
   //strcpy(cronArgs[0], ""); // send temp to cron
   //strcpy(cronArgs[1], "a");
   return 0;
 }
+
+void test(int *test) {
+	int pid = 5;
+	printf("previousPid -0:%d !\n", *test);
+	*test = pid;
+	printf("previousPid -1:%d !\n", *test);
+}
+
 
 void checkRedirection(char *args[], int *redirect, char outFile[])
 {
