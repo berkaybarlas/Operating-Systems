@@ -12,6 +12,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 #include <linux/types.h>
 #include <linux/slab.h>
 #include <linux/sched.h>
+#include <linux/sched/signal.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Berkay Barlas, Ege Onat Ozsuer");
