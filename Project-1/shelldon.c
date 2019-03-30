@@ -473,6 +473,7 @@ int oneMinSong(char *args[])
   int hour = 0;
   int min = 0;
   pid_t child;
+  char temp[MAX_LINE];
 
   if (args[2] == NULL)
   {
@@ -492,14 +493,12 @@ int oneMinSong(char *args[])
   {
     char buf[MAX_LINE];
     getcwd(buf,1024);
-    char temp[MAX_LINE];
     strcpy(temp,buf);
     strcat(temp,"/");
     strcat(temp,args[2]);
-    strcpy(args[2],temp);
   }
   FILE *file_ptr = fopen("temp", "w");
-  fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, args[2]);
+  fprintf(file_ptr, "%d %d * * * /usr/bin/mpg123 -q %s\n", min, hour, temp);
   fprintf(file_ptr, "%d %d * * * pkill mpg123\n", min + 1, hour);
   fclose(file_ptr);
   // Create a child and call crontab 
