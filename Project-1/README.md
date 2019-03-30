@@ -30,9 +30,27 @@ We also looked at the history functionality in the book and implemented our own.
 The user can also use the “ !X “ commands to execute these previously entered commands inside the history, where X must be the number corresponding to the line number associated with the printed args.
 
 ## Part-3
-- codeSearch
+- codeSearch "\<word\>"
+- codeSearch -r "\<word\>" 
+- codeSearch "\<word\>" -f \<file\>
+
+codeSearch command opens every file in current directory and reads them line by line if it finds a match it prints that line. 
+
+eg.
+```
+codesearch "while"
+
+92: ./shelldon.c -> while(a,b);
+```
+
 ## Part-4
 - oldestChild
 
+In this part of our project, we developed a kernel module that prints the PIDs and executable names of the oldest children of current
+process and repeat that process for every child of root process.
+The kernel module can be compiled with makefile using
+- make all
 
+It can be loaded by using in our shell
+oldestchild <PID Number>
 
