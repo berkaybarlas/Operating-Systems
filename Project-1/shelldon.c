@@ -137,16 +137,17 @@ int main(void)
         {
         
         redirect(args, outFile); //checking and doing redirection
-
-        if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
-        {
-          char tempBuffer[83] = "/bin/";
-          strcat(tempBuffer, args[0]);
-          strcpy(args[0], tempBuffer);
-        }
         
-        status = execv(args[0], args);
-        printf("Failed to find executable\n");
+        if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
+        {  
+          char path[MAX_LINE] = "/bin/";
+          strcat(path, args[0]);
+          status = execv(path, args);
+        } else {
+          status = execv(args[0], args);
+        }
+        if (status < 0 )
+          printf("Failed to find executable\n");
         return 0;
         }
       }
