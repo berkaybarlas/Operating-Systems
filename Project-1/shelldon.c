@@ -119,36 +119,36 @@ int main(void)
         saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
         continue;
       }
-
-      child = fork();
-      if (child == 0)
+      
+      if (strcmp(args[0], "codesearch") == 0)
       {
-        if (strcmp(args[0], "codesearch") == 0)
-        {
-          codesearch(".", args);
-        }
-        else if (strcmp(args[0], "oldestchild") == 0)
-        {
-          oldestChild(args, &previousPid);
-        }
-        else if (strcmp(args[0], "birdakika") == 0)
-        {
-          oneMinSong(args);
-        }
-        else
-        {
-          if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
-          {
-            char tempBuffer[83] = "/bin/";
-            strcat(tempBuffer, args[0]);
-            strcpy(args[0], tempBuffer);
-          }
-          redirect(args, outFile); //checking and doing redirection
-          status = execv(args[0], args);
-          printf("Failed to find executable\n");
-        }
-        return 0;
+        codesearch(".", args);
       }
+      else if (strcmp(args[0], "oldestchild") == 0)
+      {
+        oldestChild(args, &previousPid);
+      }
+      else if (strcmp(args[0], "birdakika") == 0)
+      {
+        oneMinSong(args);
+      } else {
+        child = fork();
+        if (child == 0)
+        {
+        if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
+        {
+          char tempBuffer[83] = "/bin/";
+          strcat(tempBuffer, args[0]);
+          strcpy(args[0], tempBuffer);
+        }
+        redirect(args, outFile); //checking and doing redirection
+        status = execv(args[0], args);
+        printf("Failed to find executable\n");
+        return 0;
+        }
+      }
+      
+      // only parent execute this part
       if (background == 0)
       {
         int childStatus;
