@@ -43,6 +43,8 @@ codesearch "while"
 92: ./shelldon.c -> while(a,b);
 ```
 
+We also chose "write" as our defined command. Write uses an external program called figlet to echo the second argument given, but in a prettified form.
+
 ## Part-4
 - oldestChild
 
