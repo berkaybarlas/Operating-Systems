@@ -32,11 +32,15 @@ static int custom_module_init(void) {
 		
 		pid_struct = find_get_pid(processID);
 		task = pid_task(pid_struct, PIDTYPE_PID);
+
+		//If no process ID is provided or the process ID is invalid, print an error message to kernel log.
+
 		printk(KERN_INFO "PID: [%d]\n", task->pid);
 		printk(KERN_INFO "Parent PID: [%d]\n", (task->parent)->pid);
 		printk(KERN_INFO "Process Start time: [%d]\n", task->start_time);
 		printk(KERN_INFO "Executable Name: [%s]",task->comm);
 		oldestchild(task);
+		
 		return 0;
 }
 
@@ -45,29 +49,27 @@ static void custom_module_exit(void) {
 }
 
 void oldestchild(struct task_struct *t) {
-	//If no process ID is provided or the process ID is invalid, print an error message to kernel log.
-
 		struct task_struct *task = t;
+		struct task_struct *oldestProcess = NULL;
 		struct task_struct *temp_task;
 		struct list_head *list;
 	
-	
-    //for_each_process(task) 
-    {
-		//if (task->pid == processID)
-		{
-			list_for_each(list, &task->children) {
-				temp_task = list_entry(list, struct task_struct, sibling);
-				oldestchild(temp_task);
-				printk(KERN_INFO "\tChild PID: [%d]\n",temp_task->pid);
-				printk(KERN_INFO "\tChild Start time: [%d]\n", temp_task->start_time);
-				printk(KERN_INFO "\tChild Executable Name: [%s]\n",temp_task->comm);
-			}
+	//prints the PIDs and executable names of the oldest children
+	long oldestTime = NULL; 
+	list_for_each(list, &task->children) {
+		temp_task = list_entry(list, struct task_struct, sibling);
+		if(oldestTime == NULL || oldestTime > temp_task->start_time) {
+			oldestProcess = temp_task;
+			oldestTime = temp_task->start_time;
 		}
+		oldestchild(temp_task);
+	}
+	if(*oldestProcess != NULL) {
+		printk(KERN_INFO "\tOldest Child of [%d] PID: [%d]\n",(temp_task->parent)->pid,temp_task->pid);
+		printk(KERN_INFO "\tOldestChild of [%d] Start time: [%d]\n",(temp_task->parent)->pid ,temp_task->start_time);
+		printk(KERN_INFO "\tOldestChild of [%d] Executable Name: [%s]\n",(temp_task->parent)->pid ,temp_task->comm);
 	}
 }
-
-
 
 module_init(custom_module_init);
 module_exit(custom_module_exit);

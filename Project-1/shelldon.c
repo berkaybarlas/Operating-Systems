@@ -532,7 +532,7 @@ int oldestChild(char *args[], int *previousPid) {
   }
   pid = atoi(args[1]);
   if(*previousPid == pid) {
-    printf("Please indicate processID!\n");
+    printf("Please indicate different processID, you already loaded that module!\n");
     return -1;
   }
   *previousPid = pid;
