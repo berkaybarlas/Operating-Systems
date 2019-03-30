@@ -66,8 +66,8 @@ void oldestchild(struct task_struct *t) {
 	}
 	if(*oldestProcess != NULL) {
 		printk(KERN_INFO "\tOldest Child of [%d] PID: [%d]\n",(temp_task->parent)->pid,temp_task->pid);
-		printk(KERN_INFO "\tOldestChild of [%d] Start time: [%d]\n",(temp_task->parent)->pid ,temp_task->start_time);
-		printk(KERN_INFO "\tOldestChild of [%d] Executable Name: [%s]\n",(temp_task->parent)->pid ,temp_task->comm);
+		printk(KERN_INFO "\tOldest Child of [%d] Start time: [%d]\n",(temp_task->parent)->pid ,temp_task->start_time);
+		printk(KERN_INFO "\tOldest Child of [%d] Executable Name: [%s]\n",(temp_task->parent)->pid ,temp_task->comm);
 	}
 }
 
