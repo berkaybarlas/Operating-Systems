@@ -135,13 +135,16 @@ int main(void)
         child = fork();
         if (child == 0)
         {
+        
+        redirect(args, outFile); //checking and doing redirection
+
         if (args[0] != NULL && strncmp(args[0], "./", 2) != 0)
         {
           char tempBuffer[83] = "/bin/";
           strcat(tempBuffer, args[0]);
           strcpy(args[0], tempBuffer);
         }
-        redirect(args, outFile); //checking and doing redirection
+        
         status = execv(args[0], args);
         printf("Failed to find executable\n");
         return 0;
