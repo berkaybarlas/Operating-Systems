@@ -16,10 +16,11 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Berkay Barlas, Ege Onat Ozsuer");
 
-int processID = 0, ;
-module_param(processID,int,0);]
+int processID = 0;
+module_param(processID,int,0);
 
 void print_details(struct task_struct *t);
+void oldestchild(struct task_struct *t)
 
 static int custom_module_init(void){
 		printk(KERN_INFO "Loading Module\n");
