@@ -21,7 +21,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 
 #define MAX_LINE 80    /* 80 chars per line, per command, should be enough. */
 #define HIST_LENGTH 10 // Number of args to be stored in history
-#define MODULE "oldestchild"
+#define MODULE "oldestChild"
 //int parseCommand(char inputBuffer[], char *args[],int *background);
 
 int codesearch(char dir[], char *args[]);
