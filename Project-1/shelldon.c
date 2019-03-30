@@ -562,10 +562,16 @@ int oldestChild(char *args[], int *previousPid) {
       processID,
       0
     };
-    int status = 0;
-    execv(insModArgs[0], insModArgs);
-    if (status < 0) {
-      printf("Error during insmod\n");
+    child = fork();
+    int childStatus;
+    if(child == 0) {
+      execv(insModArgs[0], insModArgs);
+      printf("oldestchild module installed with parameter %s\n",processID);
+    } else {
+      waitpid(child, &childStatus, 0);
+      if (childStatus < 0) {
+        printf("Error during insmod\n");
+      }
     }
   }
   return 0;
