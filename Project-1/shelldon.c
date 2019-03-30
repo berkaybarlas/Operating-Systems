@@ -21,7 +21,7 @@ KUSIS ID: 54512 PARTNER NAME: Berkay Barlas
 
 #define MAX_LINE 80    /* 80 chars per line, per command, should be enough. */
 #define HIST_LENGTH 10 // Number of args to be stored in history
-#define MODULE "oldestchild"
+#define MODULE "oldestChild"
 //int parseCommand(char inputBuffer[], char *args[],int *background);
 
 int codesearch(char dir[], char *args[]);
@@ -540,7 +540,7 @@ int oldestChild(char *args[], int *previousPid) {
   }
   pid = atoi(args[1]);
   if(*previousPid == pid) {
-    printf("Please indicate processID!\n");
+    printf("Please indicate different processID, you already loaded that module!\n");
     return -1;
   }
   *previousPid = pid;
@@ -570,10 +570,16 @@ int oldestChild(char *args[], int *previousPid) {
       processID,
       0
     };
-    int status = 0;
-    execv(insModArgs[0], insModArgs);
-    if (status < 0) {
-      printf("Error during insmod\n");
+    child = fork();
+    int childStatus;
+    if(child == 0) {
+      execv(insModArgs[0], insModArgs);
+      printf("oldestchild module installed with parameter %s\n",processID);
+    } else {
+      waitpid(child, &childStatus, 0);
+      if (childStatus < 0) {
+        printf("Error during insmod\n");
+      }
     }
   }
   return 0;
