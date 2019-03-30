@@ -130,6 +130,24 @@ int main(void)
       	saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
       	continue;
       }
+      if (strcmp(args[0], "write") == 0)
+      {      
+        child = fork();
+      	if(child == 0) {
+    	char *figletArgs[3] = {
+      		"/usr/bin/figlet",
+      		"error",
+      		NULL
+    	};
+    	figletArgs[1] = args[1];	
+//    	redirect(figletArgs, outFile);
+    	execv(figletArgs[0], figletArgs);
+  		} else {
+    		waitpid(child, NULL, 0);
+  		}
+      	saveHistory(inputBuffer, args, argsHistory, buffersHistory, argct, background);
+      	continue;
+      }
       if (strcmp(args[0], "codesearch") == 0)
       {
         codesearch(".", args);
