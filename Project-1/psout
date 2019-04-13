@@ -1,7 +1,0 @@
-  PID TTY          TIME CMD
- 5640 pts/0    00:00:02 bash
- 6860 pts/0    00:26:22 gedit
-32085 pts/0    00:00:00 make
-32086 pts/0    00:00:00 sh
-32092 pts/0    00:00:00 shelldon.o
-32141 pts/0    00:00:00 ps
