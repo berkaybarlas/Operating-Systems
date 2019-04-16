@@ -79,26 +79,24 @@ Instructor: & Didem Unat % Instructor/supervisor
 
 \section{Problem 1}
 
-\subsection{}Draw four Gantt charts illustrating the execution of these processes using FCFS, SJF,
-a non- preemptive priority (a smaller priority number implies a higher priority), and RR
-(quantum = 4 ms) scheduling
+\subsection{}
 
 \begin{description}
     \item[Process Execution Gantt Chart of FCFS] \hfill 
-    \\
-    \\ 
+    
+    
     \includegraphics[width=1\linewidth]{./fcfs.png}
     \item[Process Execution Gantt Chart of SJF] \hfill 
-    \\
-    \\ 
+    
+    
     \includegraphics[width=1\linewidth]{./sjf.png}
     \item[Process Execution Gantt Chart of non-preemptive Priority] \hfill 
-    \\
-    \\ 
+    
+    
     \includegraphics[width=1\linewidth]{./priority.png}
     \item[Process Execution Gantt Chart of RR] \hfill 
-    \\
-    \\ 
+    
+    
     \includegraphics[width=1\linewidth]{./rr.png}
 \end{description}
 
@@ -124,8 +122,8 @@ SJF(Shortest Job First) results in the minimal average waiting time.\\ \\
         \item[Waiting Time of P2:] 6 
         \item[Waiting Time of P3:] 2
         \item[Waiting Time of P4:] 0
-        \item[Waiting Time of P5:] 20
-        \item[Average waiting time:] ( 12 + 6 + 2 + 0 + 20 ) / 5 = 8 
+        \item[Waiting Time of P5:] 21
+        \item[Average waiting time:] ( 12 + 6 + 2 + 0 + 21 ) / 5 = 8.2 
     \end{description}
     \item[Process Execution Gantt Chart of non-preemptive Priority] \hfill 
     \begin{description}
@@ -182,9 +180,9 @@ Now assume that the context-switching overhead is equivalent to 0.5 ms. Calculat
 \section{Problem 3}
 
 \subsection{}
-There is race condition in code, thus, output is non-deterministic and depends on order of process execution.
+\tab There is race condition in code, thus, output is non-deterministic and depends on order of process execution.
 \\The available\_connections is shared variable and it might be written by multiple threads simultaneously inside of the connect() and disconnect() methods.
-\\Since write is actually consist of multiple Instructions 
+\\Since write is actually consist of multiple Instructions, a race condition may occur when two or more threads access the shared data and they try to change it at the same time.
 \subsection{}
 We could use locks to prevent race condition.
 
@@ -219,22 +217,25 @@ int connect() {
  }
 \end{lstlisting}
 
-\subsection{}To prevent race condition(s), could we replace the integer variable available connections
-with atomic integer, which allows atomic update of a variable of this type? Explain your
-answer.
-\\ No, replacing the integer with atomic integer is not enough for preventing race condition. While one of the threads inside of if statement of connect (before returning) another thread might increase the available\_connections variable which might effect of the result of if statement.
-
+\subsection{}
+\tab 
+\\ \tab Using atomic integer will prevent the race condition that caused by change of shared variable by multiple threads at the same time. However, replacing the integer with atomic integer is not enough. While one of the threads inside of the if statement of connect method (before returning) another thread might increase the available\_connections variable which might effect of the result of if statement. For example, connect() method could return \-1 even available\_connections is 1 (It was 0 when the statement checked but then inreased to 1 before return by another thread inside of the disconnect() method. ).
+\newpage
 \section{Problem 4}
-We could use semaphore with initial value M ,however, if a party with more than 4 numcustomers arrive we need to be sure we have enough rooms. Thus, we can use a semaphore with initial value 1 and use it to check available number of rooms.
+\tab We could use semaphore with initial value M ,however, if a party with more than 4 numcustomers arrive we need to be sure we have enough rooms. Thus, we can use a semaphore with initial value 1 and a global variable to check available number of rooms.
 \begin{lstlisting}[language=C]
 
-    semaphore room = 1;
+    semaphore roomLock = 1;
     int roomNum = M;
 
     int makeReservation(int numCustomers) {
-        wait(room);
-        int roomNeeded = numCustomers / 4 + 1; 
-        // int a = 2 / 4 + 1 = 1; a = 1
+        int roomNeeded = (numCustomers + 3 ) / 4;  
+        // I added 3 to round upper bound. 
+        // When 1 || 2 || 3 || 4 customer come roomNeeded should be 1 
+        // When 5 customer come roomNeeded should be 2 
+        // int a = (2 + 3) / 4 = 1; a = 1
+        wait(roomLock);
+        
         if(roomNum >=roomNeeded ) {
             //accept
             roomNum = roomNum - roomNeeded;
@@ -242,65 +243,66 @@ We could use semaphore with initial value M ,however, if a party with more than 
         } else {
             //decline
         }
-        signal(room);
+        signal(roomLock);
         return 0;
     }
 
     int checkout(int roomNumber) {
-        wait(room);
+        wait(roomLock);
         roomNum = roomNum + roomNumber;
-        signal(room);
+        signal(roomLock);
     }
 
 \end{lstlisting}
 \newpage
 \section{Problem 5}
+\tab I we can use 3 different semaphores with initial value 1 for each data item. Process P and S requires only one semaphore since they only share single data item with other process. However, processes Q and R share two data item therefore they need 2 semaphores. 
 \begin{lstlisting}[language=C]
 
-    data d1;
-    data d2;
-    data d3;
-    semaphore d1;
-    semaphore d2;
-    semaphore d3;
+    data d1; // shared data item, could be any data
+    data d2; // shared data item, could be any data
+    data d3; // shared data item, could be any data
+    semaphore lock1 = 1;
+    semaphore lock2 = 1;
+    semaphore lock3 = 1;
 /* process P runs in this function */
 void *P() {
-    wait(d1);
+    wait(lock1);
 
     //makeCalculation
 
-    signal(d1);
+    signal(lock1);
 }
  
 /* process Q runs in this function */
 void *Q() {
-    wait(d2);
-    wait(d1);
+    wait(lock2);
+    wait(lock1);
 
     //makeCalculation
 
-    signal(d1);
-    signal(d2);
+    signal(lock1);
+    signal(lock2);
 }
 
 /* process R runs in this function */
 void *R() {
-    wait(d2);
-    wait(d3);
+    wait(lock2);
+    wait(lock3);
 
     //makeCalculation
 
-    signal(d3);
-    signal(d2);
+    signal(lock3);
+    signal(lock2);
 }
 
 /* process S runs in this function */
 void *S() {
-    wait(d3);
+    wait(lock3);
 
     //makeCalculation
 
-    signal(d3);
+    signal(lock3);
 }
 \end{lstlisting}
 \end{document}
