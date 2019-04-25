@@ -4,6 +4,8 @@
 #include <vector>
 #include <queue>
 #include <ctime>
+#include <random>
+#include "pthread_sleep.c"
 #include <getopt.h>
 #include <assert.h>
 #include <unistd.h>
@@ -29,8 +31,8 @@ struct thread_data {
    char *message;
 };
 
-void initLanes(vector<queue<car>> lanes); //Put 1 car in each lane
-void laneLoop(queue<car>); //Loop for lane threads to spawn cars
+void initLanes(vector<queue<car>> *lanes); //Put 1 car in each lane
+void laneLoop(queue<car> *lane, double p, char dir); //Loop for lane threads to spawn cars
 
 int carID = 0;
 
@@ -81,7 +83,7 @@ int main (int argc, char *argv[]) {
    int s;
    vector<queue<int> > lanes;
    
-   initLanes(lanes);
+   initLanes(&lanes);
    
    cmdline(argc, argv, p, s);
    
@@ -101,12 +103,10 @@ int main (int argc, char *argv[]) {
    pthread_exit(NULL);
 }
 
-void initLanes(vector<queue<int> > lanes){
+void initLanes(vector<queue<int> > *lanes){
 	for(int dir = 0; dir < 0; dir++){
-		queue<car> q = lanes[dir];
-		car c {carID++, 'W', time(NULL), 0, 0};
+		queue<car> q = (*lanes)[dir];
+		car c {carID++, 'N', time(NULL), 0, 0};
 		q.push(c);
 	}
 }
-
-
