@@ -3,25 +3,29 @@
 #include <pthread.h>
 #include <vector>
 #include <queue>
+#include <ctime>
 
 using namespace std;
 
 #define NUM_THREADS 5
 
-void initLanes(vector<queue<int>> lanes);
+struct car {
+   int carID;
+   char direction;
+   time_t arrivalTime;
+   time_t crossTime;
+   time_t waitTime;
+};
 
 struct thread_data {
    int  thread_id;
    char *message;
 };
 
-struct car {
-   int carID;
-   char direction;
-   char *arrivalTime;
-   char *crossTime;
-   int waitTime;
-};
+void initLanes(vector<queue<car>> lanes); //Put 1 car in each lane
+void laneLoop(queue<car>); //Loop for lane threads to spawn cars
+
+int carID = 0;
 
 void *PrintHello(void *threadarg) {
    struct thread_data *my_data;
@@ -44,7 +48,7 @@ int main () {
    struct thread_data td[NUM_THREADS];
    int rc;
    int i;
-   vector<queue<int>> lanes;
+   vector<queue<car>> lanes;
    
    initLanes(lanes);
 
@@ -62,9 +66,10 @@ int main () {
    pthread_exit(NULL);
 }
 
-void initLanes(vector<queue<int>> lanes){
+void initLanes(vector<queue<car>> lanes){
 	for(int dir = 0; dir < 0; dir++){
-		queue<int> q = lanes[dir];
-		q.push((dir+2)%4);
+		queue<car> q = lanes[dir];
+		car c {carID++, 'W', time(NULL), 0, 0};
+		q.push(c);
 	}
 }
