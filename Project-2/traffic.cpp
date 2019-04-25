@@ -4,11 +4,18 @@
 #include <vector>
 #include <queue>
 #include <ctime>
+#include <getopt.h>
+#include <assert.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 
 using namespace std;
 
 #define NUM_THREADS 5
 
+void initLanes(vector<queue<int> > lanes);
 struct car {
    int carID;
    char direction;
@@ -43,14 +50,42 @@ void printIntersection(int n, int w, int e, int s) {
    cout << "   " << s << endl;
 }
 
-int main () {
+void cmdline(int argc, char *argv[], double &p, int &s ) {
+int flags, opt;
+   s = 100;
+   p = 1.0;
+    flags = 0;
+    while ((opt = getopt(argc, argv, "s:p:")) != -1) {
+        switch (opt) {
+        case 's':
+            s = atoi(optarg);
+            cout << " S:  "<< optarg << endl;
+            break;
+        case 'p':
+            p = atof(optarg);
+            cout << " P:  " << optarg << endl;
+            break;
+        default: /* 'Error' */
+            fprintf(stderr, "Usage: %s [-t nsecs] [-n] name\n",
+                    argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+int main (int argc, char *argv[]) {
    pthread_t threads[NUM_THREADS];
    struct thread_data td[NUM_THREADS];
    int rc;
    int i;
-   vector<queue<car>> lanes;
+   double p;
+   int s;
+   vector<queue<int> > lanes;
    
    initLanes(lanes);
+   
+   cmdline(argc, argv, p, s);
+   
+   cout << "Args:" << p <<" "<< s << endl;
 
    for( i = 0; i < NUM_THREADS; i++ ) {
       cout <<"main() : creating thread, " << i << endl;
@@ -66,10 +101,12 @@ int main () {
    pthread_exit(NULL);
 }
 
-void initLanes(vector<queue<car>> lanes){
+void initLanes(vector<queue<int> > lanes){
 	for(int dir = 0; dir < 0; dir++){
 		queue<car> q = lanes[dir];
 		car c {carID++, 'W', time(NULL), 0, 0};
 		q.push(c);
 	}
 }
+
+
