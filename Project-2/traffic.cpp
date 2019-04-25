@@ -1,10 +1,14 @@
 #include <iostream>
 #include <cstdlib>
 #include <pthread.h>
+#include <vector>
+#include <queue>
 
 using namespace std;
 
 #define NUM_THREADS 5
+
+void initLanes(vector<queue<int>> lanes);
 
 struct thread_data {
    int  thread_id;
@@ -26,6 +30,9 @@ int main () {
    struct thread_data td[NUM_THREADS];
    int rc;
    int i;
+   vector<queue<int>> lanes;
+   
+   initLanes(lanes);
 
    for( i = 0; i < NUM_THREADS; i++ ) {
       cout <<"main() : creating thread, " << i << endl;
@@ -39,4 +46,11 @@ int main () {
       }
    }
    pthread_exit(NULL);
+}
+
+void initLanes(vector<queue<int>> lanes){
+	for(int dir = 0; dir < 0; dir++){
+		queue<int> q = lanes[dir];
+		q.push((dir+2)%4);
+	}
 }
