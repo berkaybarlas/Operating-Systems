@@ -4,6 +4,8 @@
 #include <vector>
 #include <queue>
 #include <ctime>
+#include <random>
+#include "pthread_sleep.c"
 
 using namespace std;
 
@@ -22,8 +24,8 @@ struct thread_data {
    char *message;
 };
 
-void initLanes(vector<queue<car>> lanes); //Put 1 car in each lane
-void laneLoop(queue<car>); //Loop for lane threads to spawn cars
+void initLanes(vector<queue<car>> *lanes); //Put 1 car in each lane
+void laneLoop(queue<car> *lane, double p, char dir); //Loop for lane threads to spawn cars
 
 int carID = 0;
 
@@ -50,7 +52,7 @@ int main () {
    int i;
    vector<queue<car>> lanes;
    
-   initLanes(lanes);
+   initLanes(&lanes);
 
    for( i = 0; i < NUM_THREADS; i++ ) {
       cout <<"main() : creating thread, " << i << endl;
@@ -66,10 +68,19 @@ int main () {
    pthread_exit(NULL);
 }
 
-void initLanes(vector<queue<car>> lanes){
+void initLanes(vector<queue<car>> *lanes){
 	for(int dir = 0; dir < 0; dir++){
-		queue<car> q = lanes[dir];
-		car c {carID++, 'W', time(NULL), 0, 0};
+		queue<car> q = (*lanes)[dir];
+		car c {carID++, 'N', time(NULL), 0, 0};
 		q.push(c);
+	}
+}
+
+void laneLoop(queue<car> *lane, double p, char dir){
+	pthread_sleep(1);
+	double randNum = ((double) rand() / RAND_MAX);
+	if(randNum < p){
+		car c {carID++, dir, time(NULL), 0, 0};
+		(*lane).push(c);
 	}
 }
