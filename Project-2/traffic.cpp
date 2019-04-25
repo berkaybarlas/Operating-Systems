@@ -12,10 +12,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 using namespace std;
 
 #define NUM_THREADS 5
+#define LANE_NUMBER 2
 
 struct car {
    int carID;
@@ -85,7 +85,10 @@ int main (int argc, char *argv[]) {
    initLanes(&lanes);
    
    cmdline(argc, argv, p, s);
-   
+   std::time_t startTime = std::time(0);
+   std::clock_t start = std::clock();
+   double duration = 0;
+
    cout << "Args:" << p <<" "<< s << endl;
 
    for( i = 0; i < NUM_THREADS; i++ ) {
@@ -99,13 +102,40 @@ int main (int argc, char *argv[]) {
          exit(-1);
       }
    }
+   // Police prototype 
+   // N > E > S > W
+   int maxNumberOfCars = 0;
+   for(int dir = 0; dir < LANE_NUMBER; dir++){
+		//
+      int numberOfCars = 1;
+      if(numberOfCars > maxNumberOfCars) {
+         maxNumberOfCars = numberOfCars;
+      }
+	}
+   
+   for(int dir = 0; dir < LANE_NUMBER; dir++){
+		//
+      // check if it equals maxNumberOfCars
+      // if it is equal stop for loop 
+      // N > E > S > W
+	}
+
+   while(duration < s) {
+      // Make things 
+
+      duration = (std::clock() - start ) / (double) CLOCKS_PER_SEC;
+   }
+   
+   cout << "finished computation at " << std::clock() << " elapsed time: " << duration << "s\n";
    pthread_exit(NULL);
+   
 }
 
 void initLanes(vector<queue<car> > *lanes){
-	for(int dir = 0; dir < 0; dir++){
+	for(int dir = 0; dir < LANE_NUMBER; dir++){
 		queue<car> q = (*lanes)[dir];
 		car c = {carID++, 'N', time(NULL), 0, 0};
 		q.push(c);
+      // put q into an Array
 	}
 }
