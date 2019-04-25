@@ -15,6 +15,14 @@ struct thread_data {
    char *message;
 };
 
+struct car {
+   int carID;
+   char direction;
+   char *arrivalTime;
+   char *crossTime;
+   int waitTime;
+};
+
 void *PrintHello(void *threadarg) {
    struct thread_data *my_data;
    my_data = (struct thread_data *) threadarg;
@@ -23,6 +31,12 @@ void *PrintHello(void *threadarg) {
    cout << " Message : " << my_data->message << endl;
 
    pthread_exit(NULL);
+}
+
+void printIntersection(int n, int w, int e, int s) {
+   cout << "   " << n << endl;
+   cout << w <<"     " << e << endl;
+   cout << "   " << s << endl;
 }
 
 int main () {
