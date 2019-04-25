@@ -17,7 +17,6 @@ using namespace std;
 
 #define NUM_THREADS 5
 
-void initLanes(vector<queue<int> > lanes);
 struct car {
    int carID;
    char direction;
@@ -31,7 +30,7 @@ struct thread_data {
    char *message;
 };
 
-void initLanes(vector<queue<car>> *lanes); //Put 1 car in each lane
+void initLanes(vector<queue<car> > *lanes); //Put 1 car in each lane
 void laneLoop(queue<car> *lane, double p, char dir); //Loop for lane threads to spawn cars
 
 int carID = 0;
@@ -81,7 +80,7 @@ int main (int argc, char *argv[]) {
    int i;
    double p;
    int s;
-   vector<queue<int> > lanes;
+   vector<queue<car> > lanes;
    
    initLanes(&lanes);
    
@@ -103,10 +102,10 @@ int main (int argc, char *argv[]) {
    pthread_exit(NULL);
 }
 
-void initLanes(vector<queue<int> > *lanes){
+void initLanes(vector<queue<car> > *lanes){
 	for(int dir = 0; dir < 0; dir++){
 		queue<car> q = (*lanes)[dir];
-		car c {carID++, 'N', time(NULL), 0, 0};
+		car c = {carID++, 'N', time(NULL), 0, 0};
 		q.push(c);
 	}
 }
