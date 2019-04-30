@@ -85,7 +85,6 @@ int main (int argc, char *argv[]) {
    pthread_t threads[NUM_THREADS];
    struct thread_data td[NUM_THREADS];
    int rc;
-   int i;
    int s;
    
    if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL)) { 
@@ -102,10 +101,11 @@ int main (int argc, char *argv[]) {
    
    cout << "Args:" << p <<" "<< s << endl;
 
-   for( i = 0; i < LANE_NUMBER; i++ ) {
+   for( int i = 0; i < LANE_NUMBER; i++ ) {
       cout <<"main() : creating thread, " << i << endl;
-      int index = i;
-      rc = pthread_create(&threads[i], NULL, initLane, (void *)(&index));
+      int *index = (int*) malloc(sizeof(int));
+      *index = i;
+      rc = pthread_create(&threads[i], NULL, initLane, (void *)(index));
       
       if (rc) {
          cout << "Error:unable to create thread," << rc << endl;
@@ -118,26 +118,7 @@ int main (int argc, char *argv[]) {
    // N > E > S > W
    int maxNumberOfCars = 0;
    int turnIndex = 0;
-   for(int i = 0; i < LANE_NUMBER; i++) {
-		//
-      int numberOfCars = lanes[i].size();
-      if(numberOfCars > maxNumberOfCars) {
-         turnIndex = i; 
-         maxNumberOfCars = numberOfCars;
-      }
-	}
-   if(maxNumberOfCars != 0) {
-      car &crossingCar = (lanes[i].front());
-      lanes[i].pop();
-//      cout << crossingCar.carID << endl;
-   }
    
-   // for(int dir = 0; dir < LANE_NUMBER; dir++) {
-		//
-      // check if it equals maxNumberOfCars
-      // if it is equal stop for loop 
-      // N > E > S > W
-	// }
 
    while(duration < s) {
       // Make things
@@ -145,6 +126,23 @@ int main (int argc, char *argv[]) {
          prev_sec = ++second * ONE_SECOND; 
          cout << second << " second elapsed" << clock() << endl; 
          printIntersection(lanes[0].size(),lanes[1].size(),lanes[2].size(),lanes[3].size());
+      
+      pthread_mutex_lock(&lane_lock);
+      for(int i = 0; i < LANE_NUMBER; i++) {
+         //
+         int numberOfCars = lanes[i].size();
+         if(numberOfCars > maxNumberOfCars) {
+            turnIndex = i; 
+            maxNumberOfCars = numberOfCars;
+         }
+      }
+      cout << "The biggest size: " << maxNumberOfCars << " " <<  turnIndex <<endl;
+      if(maxNumberOfCars != 0) {
+         car crossingCar = (lanes[turnIndex].front());
+         lanes[turnIndex].pop();
+         cout << "Crossing Car: " << crossingCar.carID << endl;
+      }
+      pthread_mutex_unlock(&lane_lock);
       }
       duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
    }
