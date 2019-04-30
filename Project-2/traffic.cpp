@@ -33,13 +33,14 @@ struct thread_data {
 
 char directions[4] = {'N', 'E', 'S', 'W'};
 
-void *initLanes(vector<queue<car> > *lanes); //Put 1 car in each lane
+void *initLane(void *laneIndptr); //Put 1 car in each lane
 void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 
 int carID = 0;
 double p;
 vector<queue<car> > lanes(4, std::queue<car>());
 pthread_mutex_t print_lock;
+pthread_mutex_t lane_lock;
 
 void *PrintHello(void *threadarg) {
    struct thread_data *my_data;
@@ -87,7 +88,7 @@ int main (int argc, char *argv[]) {
    int i;
    int s;
    
-   if (pthread_mutex_init(&print_lock, NULL) != 0) { 
+   if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL)) { 
         printf("\n mutex init has failed\n"); 
         return 1; 
    } 
@@ -105,7 +106,7 @@ int main (int argc, char *argv[]) {
       cout <<"main() : creating thread, " << i << endl;
       td[i].thread_id = i;
       td[i].message = "This is message";
-      rc = pthread_create(&threads[i], NULL, PrintHello, (void *)&td[i]);
+      rc = pthread_create(&threads[i], NULL, initLane, (void *)&td[i]);
       
       if (rc) {
          cout << "Error:unable to create thread," << rc << endl;
@@ -142,21 +143,26 @@ int main (int argc, char *argv[]) {
    
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
-   
+   pthread_mutex_destroy(&lane_lock); 
 }
 
-void *initLane(int laneInd){
-	car c = {carID++, directions[laneInd], clock(), 0, 0};
-	lanes[laneInd].push(c);
-	laneLoop(laneInd);
+void *initLane(void *laneIndptr){
+	int ind = *((int*)laneIndptr);
+	pthread_mutex_lock(&lane_lock);
+	car c = {carID++, directions[ind], clock(), 0, 0};
+	lanes[ind].push(c);
+	pthread_mutex_unlock(&lane_lock);
+	laneLoop(ind);
 }
 
 void laneLoop(int laneInd){
 	pthread_sleep(1);
 	double randNum = (double)rand() / (double)RAND_MAX;
 	if(randNum < p){
+		pthread_mutex_lock(&lane_lock);
 		car c = {carID++, directions[laneInd], clock(), 0, 0};
 		lanes[laneInd].push(c);
+		pthread_mutex_unlock(&lane_lock);
 	}
 	laneLoop(laneInd);
 }
