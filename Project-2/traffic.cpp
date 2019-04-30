@@ -152,9 +152,10 @@ int main (int argc, char *argv[]) {
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
    pthread_mutex_destroy(&lane_lock); 
+   // Add exit to close all threads
 }
 
-void *initLane(void *laneIndptr){
+void *initLane(void *laneIndptr) {
 	int ind = *((int*)laneIndptr);
 	pthread_mutex_lock(&lane_lock);
 	car c = {carID++, directions[ind], clock(), 0, 0};
@@ -163,7 +164,7 @@ void *initLane(void *laneIndptr){
 	laneLoop(ind);
 }
 
-void laneLoop(int laneInd){
+void laneLoop(int laneInd) {
 	pthread_sleep(1);
    srand(time(0));
 	double randNum = (double)rand() / (double)RAND_MAX;
