@@ -30,8 +30,10 @@ struct thread_data {
    const char *message;
 };
 
-void initLanes(vector<queue<car> > *lanes); //Put 1 car in each lane
-void *laneLoop(int laneInd); //Loop for lane threads to spawn cars
+char directions[4] = {'N', 'E', 'S', 'W'};
+
+void *initLanes(vector<queue<car> > *lanes); //Put 1 car in each lane
+void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 
 int carID = 0;
 double p;
@@ -83,8 +85,6 @@ int main (int argc, char *argv[]) {
    int i;
    int s;
    
-   initLanes(&lanes);
-   
    cmdline(argc, argv, p, s);
    std::time_t startTime = std::time(0);
    std::clock_t start = std::clock();
@@ -131,21 +131,18 @@ int main (int argc, char *argv[]) {
    
 }
 
-void initLanes(vector<queue<car> > *lanes){
-	for(int dir = 0; dir < LANE_NUMBER; dir++){
-		queue<car> q = (*lanes)[dir];
-		car c = {carID++, 'N', clock(), 0, 0};
-		q.push(c);
-	}
+void *initLane(int laneInd){
+	car c = {carID++, directions[laneInd], clock(), 0, 0};
+	lanes[laneInd].push(c);
+	laneLoop(laneInd);
 }
 
-void *laneLoop(int laneInd){
+void laneLoop(int laneInd){
 	pthread_sleep(1);
 	double randNum = (double)rand() / (double)RAND_MAX;
 	if(randNum < p){
-		car c = {carID++, 'N', clock(), 0, 0};
+		car c = {carID++, directions[laneInd], clock(), 0, 0};
 		lanes[laneInd].push(c);
-		cout << "Pushed car to lane " << laneInd << endl;
 	}
 	laneLoop(laneInd);
 }
