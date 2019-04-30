@@ -166,7 +166,7 @@ void *initLane(void *laneIndptr) {
 
 void laneLoop(int laneInd) {
 	pthread_sleep(1);
-   srand(time(0));
+    srand(time(0));
 	double randNum = (double)rand() / (double)RAND_MAX;
 	if(randNum < p){
 		pthread_mutex_lock(&lane_lock);
@@ -175,4 +175,8 @@ void laneLoop(int laneInd) {
 		pthread_mutex_unlock(&lane_lock);
 	}
 	laneLoop(laneInd);
+}
+
+void northLaneLoop(){
+
 }
