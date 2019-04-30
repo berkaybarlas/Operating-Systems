@@ -116,20 +116,27 @@ int main (int argc, char *argv[]) {
    // Police prototype 
    // N > E > S > W
    int maxNumberOfCars = 0;
-   for(int dir = 0; dir < LANE_NUMBER; dir++) {
+   int turnIndex = 0;
+   for(int i = 0; i < LANE_NUMBER; i++) {
 		//
-      int numberOfCars = 1;
+      int numberOfCars = lanes[i].size();
       if(numberOfCars > maxNumberOfCars) {
+         turnIndex = i; 
          maxNumberOfCars = numberOfCars;
       }
 	}
+   if(maxNumberOfCars != 0) {
+      car &crossingCar = (lanes[i].front());
+      lanes[i].pop();
+      cout << crossingCar.carID << endl;
+   }
    
-   for(int dir = 0; dir < LANE_NUMBER; dir++) {
+   // for(int dir = 0; dir < LANE_NUMBER; dir++) {
 		//
       // check if it equals maxNumberOfCars
       // if it is equal stop for loop 
       // N > E > S > W
-	}
+	// }
 
    while(duration < s) {
       // Make things
