@@ -16,6 +16,7 @@ using namespace std;
 
 #define NUM_THREADS 5
 #define LANE_NUMBER 2
+#define ONE_SECOND 1000000
 
 struct car {
    int carID;
@@ -38,14 +39,15 @@ void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 int carID = 0;
 double p;
 vector<queue<car> > lanes(4, std::queue<car>());
+pthread_mutex_t print_lock;
 
 void *PrintHello(void *threadarg) {
    struct thread_data *my_data;
    my_data = (struct thread_data *) threadarg;
-
+   pthread_mutex_lock(&print_lock);
    cout << "Thread ID : " << my_data->thread_id ;
    cout << " Message : " << my_data->message << endl;
-
+   pthread_mutex_unlock(&print_lock); 
    pthread_exit(NULL);
 }
 
@@ -84,12 +86,24 @@ int main (int argc, char *argv[]) {
    int rc;
    int i;
    int s;
+<<<<<<< HEAD
+=======
+
+   if (pthread_mutex_init(&print_lock, NULL) != 0) { 
+        printf("\n mutex init has failed\n"); 
+        return 1; 
+   } 
+
+   initLanes(&lanes);
+>>>>>>> 141e3f5982fa069b2c042c7025a621fa71791500
    
    cmdline(argc, argv, p, s);
-   std::time_t startTime = std::time(0);
-   std::clock_t start = std::clock();
+   time_t startTime = time(0);
+   clock_t start = clock();
+   clock_t prev_sec = clock();
+   int second = 0;
    double duration = 0;
-
+   
    cout << "Args:" << p <<" "<< s << endl;
 
    for( i = 0; i < NUM_THREADS; i++ ) {
@@ -106,7 +120,7 @@ int main (int argc, char *argv[]) {
    // Police prototype 
    // N > E > S > W
    int maxNumberOfCars = 0;
-   for(int dir = 0; dir < LANE_NUMBER; dir++){
+   for(int dir = 0; dir < LANE_NUMBER; dir++) {
 		//
       int numberOfCars = 1;
       if(numberOfCars > maxNumberOfCars) {
@@ -114,7 +128,7 @@ int main (int argc, char *argv[]) {
       }
 	}
    
-   for(int dir = 0; dir < LANE_NUMBER; dir++){
+   for(int dir = 0; dir < LANE_NUMBER; dir++) {
 		//
       // check if it equals maxNumberOfCars
       // if it is equal stop for loop 
@@ -122,15 +136,21 @@ int main (int argc, char *argv[]) {
 	}
 
    while(duration < s) {
-      // Make things 
-
-      duration = (std::clock() - start ) / (double) CLOCKS_PER_SEC;
+      // Make things
+      if(clock() - prev_sec > ONE_SECOND) {
+         prev_sec = ++second * ONE_SECOND; 
+         cout << second << " second elapsed" << clock() << endl; 
+         printIntersection(lanes[0].size(),lanes[1].size(),lanes[2].size(),lanes[3].size());
+      }
+      duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
    }
    
-   cout << "finished computation at " << std::clock() << " elapsed time: " << duration << "s\n";
+   cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
+   pthread_mutex_destroy(&print_lock); 
    
 }
 
+<<<<<<< HEAD
 void *initLane(int laneInd){
 	car c = {carID++, directions[laneInd], clock(), 0, 0};
 	lanes[laneInd].push(c);
