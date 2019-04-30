@@ -27,13 +27,14 @@ struct car {
 
 struct thread_data {
    int  thread_id;
-   char *message;
+   const char *message;
 };
 
 void initLanes(vector<queue<car> > *lanes); //Put 1 car in each lane
-void laneLoop(queue<car> *lane, double p, char dir); //Loop for lane threads to spawn cars
+void *laneLoop(int laneInd); //Loop for lane threads to spawn cars
 
 int carID = 0;
+double p;
 vector<queue<car> > lanes(4, std::queue<car>());
 
 void *PrintHello(void *threadarg) {
@@ -80,7 +81,6 @@ int main (int argc, char *argv[]) {
    struct thread_data td[NUM_THREADS];
    int rc;
    int i;
-   double p;
    int s;
    
    initLanes(&lanes);
@@ -128,15 +128,24 @@ int main (int argc, char *argv[]) {
    }
    
    cout << "finished computation at " << std::clock() << " elapsed time: " << duration << "s\n";
-   pthread_exit(NULL);
    
 }
 
 void initLanes(vector<queue<car> > *lanes){
 	for(int dir = 0; dir < LANE_NUMBER; dir++){
 		queue<car> q = (*lanes)[dir];
-		car c = {carID++, 'N', time(NULL), 0, 0};
-		q.push(c); 
-      // put q into an Array
+		car c = {carID++, 'N', clock(), 0, 0};
+		q.push(c);
 	}
+}
+
+void *laneLoop(int laneInd){
+	pthread_sleep(1);
+	double randNum = (double)rand() / (double)RAND_MAX;
+	if(randNum < p){
+		car c = {carID++, 'N', clock(), 0, 0};
+		lanes[laneInd].push(c);
+		cout << "Pushed car to lane " << laneInd << endl;
+	}
+	laneLoop(laneInd);
 }
