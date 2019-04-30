@@ -15,7 +15,7 @@
 using namespace std;
 
 #define NUM_THREADS 5
-#define LANE_NUMBER 2
+#define LANE_NUMBER 4
 #define ONE_SECOND 1000000
 
 struct car {
@@ -102,7 +102,7 @@ int main (int argc, char *argv[]) {
    
    cout << "Args:" << p <<" "<< s << endl;
 
-   for( i = 0; i < NUM_THREADS; i++ ) {
+   for( i = 0; i < LANE_NUMBER; i++ ) {
       cout <<"main() : creating thread, " << i << endl;
       td[i].thread_id = i;
       td[i].message = "This is message";
@@ -113,6 +113,8 @@ int main (int argc, char *argv[]) {
          exit(-1);
       }
    }
+   // Create Police Thread 
+   
    // Police prototype 
    // N > E > S > W
    int maxNumberOfCars = 0;
