@@ -104,9 +104,8 @@ int main (int argc, char *argv[]) {
 
    for( i = 0; i < LANE_NUMBER; i++ ) {
       cout <<"main() : creating thread, " << i << endl;
-      td[i].thread_id = i;
-      td[i].message = "This is message";
-      rc = pthread_create(&threads[i], NULL, initLane, (void *)&td[i]);
+      int index = i;
+      rc = pthread_create(&threads[i], NULL, initLane, (void *)(&index));
       
       if (rc) {
          cout << "Error:unable to create thread," << rc << endl;
@@ -130,7 +129,7 @@ int main (int argc, char *argv[]) {
    if(maxNumberOfCars != 0) {
       car &crossingCar = (lanes[i].front());
       lanes[i].pop();
-      cout << crossingCar.carID << endl;
+//      cout << crossingCar.carID << endl;
    }
    
    // for(int dir = 0; dir < LANE_NUMBER; dir++) {
