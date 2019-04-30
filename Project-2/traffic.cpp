@@ -52,10 +52,10 @@ void *PrintHello(void *threadarg) {
    pthread_exit(NULL);
 }
 
-void printIntersection(int n, int w, int e, int s) {
-   cout << "   " << n << endl;
-   cout << w <<"     " << e << endl;
-   cout << "   " << s << endl;
+void printIntersection() {
+   cout << "   " << lanes[0].size() << endl;
+   cout << lanes[3].size() <<"     " << lanes[1].size() << endl;
+   cout << "   " << lanes[2].size() << endl;
 }
 
 void cmdline(int argc, char *argv[], double &p, int &s ) {
@@ -125,7 +125,7 @@ int main (int argc, char *argv[]) {
       if(clock() - prev_sec > ONE_SECOND) {
          prev_sec = ++second * ONE_SECOND; 
          cout << second << " second elapsed" << clock() << endl; 
-         printIntersection(lanes[0].size(),lanes[1].size(),lanes[2].size(),lanes[3].size());
+         printIntersection();
       
       pthread_mutex_lock(&lane_lock);
       for(int i = 0; i < LANE_NUMBER; i++) {
@@ -140,12 +140,14 @@ int main (int argc, char *argv[]) {
       if(maxNumberOfCars != 0) {
          car crossingCar = (lanes[turnIndex].front());
          lanes[turnIndex].pop();
+         maxNumberOfCars = 0;
          cout << "Crossing Car: " << crossingCar.carID << endl;
       }
       pthread_mutex_unlock(&lane_lock);
       }
       duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
    }
+   printIntersection();
    
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
@@ -163,6 +165,7 @@ void *initLane(void *laneIndptr){
 
 void laneLoop(int laneInd){
 	pthread_sleep(1);
+   srand(time(0));
 	double randNum = (double)rand() / (double)RAND_MAX;
 	if(randNum < p){
 		pthread_mutex_lock(&lane_lock);
