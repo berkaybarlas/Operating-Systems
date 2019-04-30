@@ -86,16 +86,11 @@ int main (int argc, char *argv[]) {
    int rc;
    int i;
    int s;
-<<<<<<< HEAD
-=======
-
+   
    if (pthread_mutex_init(&print_lock, NULL) != 0) { 
         printf("\n mutex init has failed\n"); 
         return 1; 
    } 
-
-   initLanes(&lanes);
->>>>>>> 141e3f5982fa069b2c042c7025a621fa71791500
    
    cmdline(argc, argv, p, s);
    time_t startTime = time(0);
@@ -150,7 +145,6 @@ int main (int argc, char *argv[]) {
    
 }
 
-<<<<<<< HEAD
 void *initLane(int laneInd){
 	car c = {carID++, directions[laneInd], clock(), 0, 0};
 	lanes[laneInd].push(c);
