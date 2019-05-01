@@ -60,10 +60,11 @@ void printIntersection() {
    cout << "   " << lanes[2].size() << endl;
 }
 
-void cmdline(int argc, char *argv[], double &p, int &s ) {
+void cmdline(int argc, char *argv[], double &p, int &s, int &t ) {
 int flags, opt;
    s = 100;
    p = 1.0;
+   t = 0;
     flags = 0;
     while ((opt = getopt(argc, argv, "s:p:")) != -1) {
         switch (opt) {
@@ -88,15 +89,15 @@ int main (int argc, char *argv[]) {
    struct thread_data td[NUM_THREADS];
    int rc;
    int s;
-   
-	srand(time(0));
+   int t;
+   srand(time(0));
    
    if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL)) { 
         printf("\n mutex init has failed\n"); 
         return 1; 
    } 
    
-   cmdline(argc, argv, p, s);
+   cmdline(argc, argv, p, s, t);
    time_t startTime = time(0);
    clock_t start = clock();
    clock_t prev_sec = clock();
@@ -121,7 +122,7 @@ int main (int argc, char *argv[]) {
 
    while(duration < s) {
       // Make things
-      if(clock() - prev_sec > ONE_SECOND) {
+      if(clock() > ONE_SECOND * t && clock() - prev_sec > ONE_SECOND) {
          prev_sec = ++second * ONE_SECOND; 
          cout << second << " second elapsed" << clock() << endl; 
          printIntersection();
@@ -138,6 +139,15 @@ int main (int argc, char *argv[]) {
 }
 
 void *police(void *) {
+   // car.log -> intersection time 
+   // police.log -> keep cell phone usage and honk 
+   FILE *carLog;
+   FILE *policeLog;
+   carLog = fopen("./car.log", "w+");
+   policeLog = fopen("./police.log", "w+");
+   fprintf(carLog, "CarID \t Direction \t Arrival-Time \t Cross-Time \t Wait-Time\n");
+   fprintf(carLog, "_________________________________________________________________\n");
+   
    while(true) {
       // Police prototype 
       // N > E > S > W
@@ -158,20 +168,28 @@ void *police(void *) {
          car crossingCar = (lanes[turnIndex].front());
          lanes[turnIndex].pop();
          maxNumberOfCars = 0;
-         //cout << "Crossing Car: " << crossingCar.carID << endl;
-         pthread_mutex_unlock(&lane_lock);
+         time_t currentTime = time(NULL);
          pthread_sleep(1);
+         int waitTime = ( currentTime - crossingCar.arrivalTime );
+         fprintf(carLog, "%d \t\t %c \t\t\t %ld \t\t %ld \t\t %d\n", crossingCar.carID, crossingCar.direction, crossingCar.arrivalTime, currentTime, waitTime);
+         cout << "Crossing Car: " << crossingCar.carID << "\t" 
+         << crossingCar.direction << "\t" 
+         << crossingCar.arrivalTime << "\t" 
+         << time(NULL) << "\t"
+         << waitTime << endl;
+         pthread_mutex_unlock(&lane_lock);
       } else {
          pthread_mutex_unlock(&lane_lock);
       }
-      
    }
+   fclose(carLog);
+   fclose(policeLog);
 }
 
 void *initLane(void *laneIndptr) {
 	int ind = *((int*)laneIndptr);
 	pthread_mutex_lock(&lane_lock);
-	car c = {carID++, directions[ind], clock(), 0, 0};
+	car c = {carID++, directions[ind], time(NULL), 0, 0};
 	lanes[ind].push(c);
 	pthread_mutex_unlock(&lane_lock);
 	if(ind == 0){
@@ -187,7 +205,7 @@ void laneLoop(int laneInd) {
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
 	if(randNum < p){
-		car c = {carID++, directions[laneInd], clock(), 0, 0};
+		car c = {carID++, directions[laneInd], time(NULL), 0, 0};
 		lanes[laneInd].push(c);
 	}
 	pthread_mutex_unlock(&lane_lock);
