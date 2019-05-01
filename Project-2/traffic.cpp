@@ -127,12 +127,12 @@ int main (int argc, char *argv[]) {
       if(clock() > ONE_SECOND * t && clock() - prev_sec > ONE_SECOND) {
          prev_sec = ++second * ONE_SECOND; 
          cout << second << " second elapsed" << clock() << endl; 
-         //printIntersection();
+         printIntersection();
 
       }
       duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
    }
-   //printIntersection();
+   printIntersection();
    
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
@@ -233,7 +233,7 @@ void laneLoop(int laneInd) {
 	pthread_sleep(1);
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
-	cout << randNum << endl;
+	//cout << randNum << endl;
 	if(randNum < p){
 		car c = {carID++, directions[laneInd], time(NULL), 0, 0};
 		lanes[laneInd].push(c);
@@ -246,7 +246,7 @@ void northLaneLoop() {
 	pthread_sleep(1);
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
-	cout << randNum << endl;
+	//cout << randNum << endl;
 	if(randNum > p){
 		car c = {carID++, directions[0], clock(), 0, 0};
 		lanes[0].push(c);
