@@ -34,6 +34,7 @@ struct thread_data {
 char directions[4] = {'N', 'E', 'S', 'W'};
 
 void *initLane(void *laneIndptr); //Put 1 car in each lane
+void *police(void*);
 void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 
 int carID = 0;
@@ -113,12 +114,7 @@ int main (int argc, char *argv[]) {
       }
    }
    // Create Police Thread 
-   
-   // Police prototype 
-   // N > E > S > W
-   int maxNumberOfCars = 0;
-   int turnIndex = 0;
-   
+   rc = pthread_create(&threads[LANE_NUMBER], NULL, police, NULL);
 
    while(duration < s) {
       // Make things
@@ -126,6 +122,24 @@ int main (int argc, char *argv[]) {
          prev_sec = ++second * ONE_SECOND; 
          cout << second << " second elapsed" << clock() << endl; 
          printIntersection();
+
+      }
+      duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
+   }
+   printIntersection();
+   
+   cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
+   pthread_mutex_destroy(&print_lock); 
+   pthread_mutex_destroy(&lane_lock); 
+   // Add exit to close all threads
+}
+
+void *police(void *) {
+   while(true) {
+      // Police prototype 
+      // N > E > S > W
+      int maxNumberOfCars = 0;
+      int turnIndex = 0;
       
       pthread_mutex_lock(&lane_lock);
       for(int i = 0; i < LANE_NUMBER; i++) {
@@ -136,23 +150,19 @@ int main (int argc, char *argv[]) {
             maxNumberOfCars = numberOfCars;
          }
       }
-      cout << "The biggest size: " << maxNumberOfCars << " " <<  turnIndex <<endl;
       if(maxNumberOfCars != 0) {
+         //cout << "The biggest size: " << maxNumberOfCars << " " <<  turnIndex <<endl;
          car crossingCar = (lanes[turnIndex].front());
          lanes[turnIndex].pop();
          maxNumberOfCars = 0;
-         cout << "Crossing Car: " << crossingCar.carID << endl;
+         //cout << "Crossing Car: " << crossingCar.carID << endl;
+         pthread_mutex_unlock(&lane_lock);
+         pthread_sleep(1);
+      } else {
+         pthread_mutex_unlock(&lane_lock);
       }
-      pthread_mutex_unlock(&lane_lock);
-      }
-      duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
+      
    }
-   printIntersection();
-   
-   cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
-   pthread_mutex_destroy(&print_lock); 
-   pthread_mutex_destroy(&lane_lock); 
-   // Add exit to close all threads
 }
 
 void *initLane(void *laneIndptr) {
