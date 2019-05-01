@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <cstring>
 
 using namespace std;
 
@@ -37,6 +38,7 @@ void *initLane(void *laneIndptr); //Put 1 car in each lane
 void *police(void*);
 void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 void northLaneLoop(); //Lane loop for the special north lane
+char* convertTime(struct tm *fullTime);
 
 int carID = 0;
 double p;
@@ -153,7 +155,9 @@ void *police(void *) {
       // N > E > S > W
       int maxNumberOfCars = 0;
       int turnIndex = 0;
-      
+      struct tm *currentTimeInfo;
+      struct tm *arrivalTimeInfo;
+
       pthread_mutex_lock(&lane_lock);
       for(int i = 0; i < LANE_NUMBER; i++) {
          //
@@ -169,21 +173,40 @@ void *police(void *) {
          lanes[turnIndex].pop();
          maxNumberOfCars = 0;
          time_t currentTime = time(NULL);
-         pthread_sleep(1);
+         currentTimeInfo = localtime(&currentTime);
+         arrivalTimeInfo = localtime(&crossingCar.arrivalTime);
+
          int waitTime = ( currentTime - crossingCar.arrivalTime );
-         fprintf(carLog, "%d \t\t %c \t\t\t %ld \t\t %ld \t\t %d\n", crossingCar.carID, crossingCar.direction, crossingCar.arrivalTime, currentTime, waitTime);
+         fprintf(carLog, "%d \t\t %c \t\t\t %s \t\t %s \t\t %d\n", 
+         crossingCar.carID, 
+         crossingCar.direction, 
+         convertTime(arrivalTimeInfo), 
+         convertTime(currentTimeInfo), waitTime);
          cout << "Crossing Car: " << crossingCar.carID << "\t" 
          << crossingCar.direction << "\t" 
-         << crossingCar.arrivalTime << "\t" 
-         << time(NULL) << "\t"
-         << waitTime << endl;
+         << convertTime(arrivalTimeInfo) << "\t" 
+         << convertTime(currentTimeInfo) << "\t"
+         << waitTime << "\t"  << endl;
          pthread_mutex_unlock(&lane_lock);
+         pthread_sleep(1);
       } else {
          pthread_mutex_unlock(&lane_lock);
       }
    }
    fclose(carLog);
    fclose(policeLog);
+}
+
+char* convertTime(struct tm *fullTime) {
+   char* Time = (char*) malloc(sizeof(char) * 8);
+   int hour = fullTime->tm_hour;
+   int min = fullTime->tm_min;
+   int sec = fullTime->tm_sec;
+   if(sec < 10) 
+      sprintf(Time, "%d:%d:0%d", hour, min, sec);
+   else
+      sprintf(Time, "%d:%d:%d", hour, min, sec);
+   return Time;
 }
 
 void *initLane(void *laneIndptr) {
@@ -212,7 +235,7 @@ void laneLoop(int laneInd) {
 	laneLoop(laneInd);
 }
 
-void northLaneLoop(){
+void northLaneLoop() {
 	pthread_sleep(1);
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
