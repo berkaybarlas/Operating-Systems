@@ -127,12 +127,12 @@ int main (int argc, char *argv[]) {
       if(clock() > ONE_SECOND * t && clock() - prev_sec > ONE_SECOND) {
          prev_sec = ++second * ONE_SECOND; 
          cout << second << " second elapsed" << clock() << endl; 
-         printIntersection();
+         //printIntersection();
 
       }
       duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
    }
-   printIntersection();
+   //printIntersection();
    
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
@@ -150,6 +150,8 @@ void *police(void *) {
    fprintf(carLog, "CarID \t Direction \t Arrival-Time \t Cross-Time \t Wait-Time\n");
    fprintf(carLog, "_________________________________________________________________\n");
    
+   int turnIndex = 0;
+   
    while(true) {
       // Police prototype 
       // N > E > S > W
@@ -163,14 +165,18 @@ void *police(void *) {
          //
          int numberOfCars = lanes[i].size();
          if(numberOfCars > maxNumberOfCars) {
-            turnIndex = i; 
+         	if(numberOfCars > 4 || lanes[turnIndex].empty()){
+            turnIndex = i;          	
+         	}
             maxNumberOfCars = numberOfCars;
          }
       }
       if(maxNumberOfCars != 0) {
          //cout << "The biggest size: " << maxNumberOfCars << " " <<  turnIndex <<endl;
          car crossingCar = (lanes[turnIndex].front());
+         //printIntersection();
          lanes[turnIndex].pop();
+         //printIntersection();
          maxNumberOfCars = 0;
          time_t currentTime = time(NULL);
          currentTimeInfo = localtime(&currentTime);
@@ -227,6 +233,7 @@ void laneLoop(int laneInd) {
 	pthread_sleep(1);
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
+	cout << randNum << endl;
 	if(randNum < p){
 		car c = {carID++, directions[laneInd], time(NULL), 0, 0};
 		lanes[laneInd].push(c);
@@ -239,6 +246,7 @@ void northLaneLoop() {
 	pthread_sleep(1);
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
+	cout << randNum << endl;
 	if(randNum > p){
 		car c = {carID++, directions[0], clock(), 0, 0};
 		lanes[0].push(c);
