@@ -152,7 +152,7 @@ void *police(void *) {
    
    int turnIndex = 0;
    
-   while(true) {
+	while(true) {
       // Police prototype 
       // N > E > S > W
       int maxNumberOfCars = 0;
@@ -166,10 +166,24 @@ void *police(void *) {
          int numberOfCars = lanes[i].size();
          if(numberOfCars > maxNumberOfCars) {
          	if(numberOfCars > 4 || lanes[turnIndex].empty()){
-            turnIndex = i;          	
+            	turnIndex = i;          	
          	}
             maxNumberOfCars = numberOfCars;
          }
+      }
+      int maxWait = 0;
+  	  for(int i = 0; i < LANE_NUMBER; i++) {
+  	  	if(!lanes[i].empty()){
+		  	car c = lanes[i].front();
+		  	time_t currentTime = time(NULL);
+		  	int waitTime = ( currentTime - c.arrivalTime );
+		  	if(waitTime > maxWait){
+		  		maxWait = waitTime;
+		  		if(waitTime > 20){
+		  			turnIndex = i;
+		  		}
+		  	}
+      	}
       }
       if(maxNumberOfCars != 0) {
          //cout << "The biggest size: " << maxNumberOfCars << " " <<  turnIndex <<endl;
@@ -248,7 +262,7 @@ void northLaneLoop() {
 	double randNum = (double)rand() / (double)RAND_MAX;
 	//cout << randNum << endl;
 	if(randNum > p){
-		car c = {carID++, directions[0], clock(), 0, 0};
+		car c = {carID++, directions[0], time(NULL), 0, 0};
 		lanes[0].push(c);
 		pthread_mutex_unlock(&lane_lock);
 	} else {
