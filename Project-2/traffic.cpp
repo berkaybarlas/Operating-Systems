@@ -36,6 +36,7 @@ char directions[4] = {'N', 'E', 'S', 'W'};
 void *initLane(void *laneIndptr); //Put 1 car in each lane
 void *police(void*);
 void laneLoop(int laneInd); //Loop for lane threads to spawn cars
+void northLaneLoop(); //Lane loop for the special north lane
 
 int carID = 0;
 double p;
@@ -87,6 +88,8 @@ int main (int argc, char *argv[]) {
    struct thread_data td[NUM_THREADS];
    int rc;
    int s;
+   
+	srand(time(0));
    
    if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL)) { 
         printf("\n mutex init has failed\n"); 
@@ -171,22 +174,37 @@ void *initLane(void *laneIndptr) {
 	car c = {carID++, directions[ind], clock(), 0, 0};
 	lanes[ind].push(c);
 	pthread_mutex_unlock(&lane_lock);
-	laneLoop(ind);
+	if(ind == 0){
+		northLaneLoop();
+	}
+	else{
+		laneLoop(ind);
+	}
 }
 
 void laneLoop(int laneInd) {
 	pthread_sleep(1);
-    srand(time(0));
+	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
 	if(randNum < p){
-		pthread_mutex_lock(&lane_lock);
 		car c = {carID++, directions[laneInd], clock(), 0, 0};
 		lanes[laneInd].push(c);
-		pthread_mutex_unlock(&lane_lock);
 	}
+	pthread_mutex_unlock(&lane_lock);
 	laneLoop(laneInd);
 }
 
 void northLaneLoop(){
-
+	pthread_sleep(1);
+	pthread_mutex_lock(&lane_lock);
+	double randNum = (double)rand() / (double)RAND_MAX;
+	if(randNum > p){
+		car c = {carID++, directions[0], clock(), 0, 0};
+		lanes[0].push(c);
+		pthread_mutex_unlock(&lane_lock);
+	} else {
+		pthread_mutex_unlock(&lane_lock);
+		pthread_sleep(19);
+	}
+	northLaneLoop();
 }
