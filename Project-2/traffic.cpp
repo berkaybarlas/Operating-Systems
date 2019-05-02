@@ -38,7 +38,8 @@ void *initLane(void *laneIndptr); //Put 1 car in each lane
 void *police(void*);
 void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 void northLaneLoop(); //Lane loop for the special north lane
-char* convertTime(struct tm *fullTime);
+char* convertTime(time_t);
+
 
 int carID = 0;
 double p;
@@ -199,14 +200,17 @@ void *police(void *) {
          int waitTime = ( currentTime - crossingCar.arrivalTime );
          fprintf(carLog, "%d \t\t %c \t\t\t %s \t\t %s \t\t %d\n", 
          crossingCar.carID, 
-         crossingCar.direction, 
-         convertTime(arrivalTimeInfo), 
-         convertTime(currentTimeInfo), waitTime);
+         crossingCar.direction,  
+         convertTime(crossingCar.arrivalTime),
+         convertTime(currentTime),
+         waitTime);
+
          cout << "Crossing Car: " << crossingCar.carID << "\t" 
          << crossingCar.direction << "\t" 
-         << convertTime(arrivalTimeInfo) << "\t" 
-         << convertTime(currentTimeInfo) << "\t"
+         << convertTime(crossingCar.arrivalTime) << "\t" 
+         << convertTime(currentTime) << "\t"
          << waitTime << "\t"  << endl;
+
          pthread_mutex_unlock(&lane_lock);
          pthread_sleep(1);
       } else {
@@ -217,11 +221,12 @@ void *police(void *) {
    fclose(policeLog);
 }
 
-char* convertTime(struct tm *fullTime) {
+char* convertTime(time_t fullTime) {
+   struct tm *localTm = localtime(&fullTime);
    char* Time = (char*) malloc(sizeof(char) * 8);
-   int hour = fullTime->tm_hour;
-   int min = fullTime->tm_min;
-   int sec = fullTime->tm_sec;
+   int hour = localTm->tm_hour;
+   int min = localTm->tm_min;
+   int sec = localTm->tm_sec;
    if(sec < 10) 
       sprintf(Time, "%d:%d:0%d", hour, min, sec);
    else
