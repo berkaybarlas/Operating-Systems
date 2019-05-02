@@ -59,7 +59,7 @@ int flags, opt;
    p = 1.0;
    t = 0;
     flags = 0;
-    while ((opt = getopt(argc, argv, "s:p:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:p:t:")) != -1) {
         switch (opt) {
         case 's':
             s = atoi(optarg);
@@ -118,9 +118,12 @@ int main (int argc, char *argv[]) {
 
    while(duration < s) {
       // Make things
-      if(clock() > ONE_SECOND * t && clock() - prev_sec > ONE_SECOND) {
+      if( clock() - prev_sec > ONE_SECOND) {
          prev_sec = ++second * ONE_SECOND; 
-         cout << second << " second elapsed" << clock() << endl; 
+         cout << second << " second elapsed" << clock() << endl;
+      }
+      if(t == second) {
+         t++; 
          printIntersection();
 
       }
