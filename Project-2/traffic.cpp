@@ -47,16 +47,6 @@ vector<queue<car> > lanes(4, std::queue<car>());
 pthread_mutex_t print_lock;
 pthread_mutex_t lane_lock;
 
-void *PrintHello(void *threadarg) {
-   struct thread_data *my_data;
-   my_data = (struct thread_data *) threadarg;
-   pthread_mutex_lock(&print_lock);
-   cout << "Thread ID : " << my_data->thread_id ;
-   cout << " Message : " << my_data->message << endl;
-   pthread_mutex_unlock(&print_lock); 
-   pthread_exit(NULL);
-}
-
 void printIntersection() {
    cout << "   " << lanes[0].size() << endl;
    cout << lanes[3].size() <<"     " << lanes[1].size() << endl;
@@ -78,6 +68,10 @@ int flags, opt;
         case 'p':
             p = atof(optarg);
             cout << " P:  " << optarg << endl;
+            break;
+         case 't':
+            t = atof(optarg);
+            cout << " T:  " << optarg << endl;
             break;
         default: /* 'Error' */
             fprintf(stderr, "Usage: %s [-t nsecs] [-n] name\n",
@@ -110,7 +104,6 @@ int main (int argc, char *argv[]) {
    cout << "Args:" << p <<" "<< s << endl;
 
    for( int i = 0; i < LANE_NUMBER; i++ ) {
-      cout <<"main() : creating thread, " << i << endl;
       int *index = (int*) malloc(sizeof(int));
       *index = i;
       rc = pthread_create(&threads[i], NULL, initLane, (void *)(index));
