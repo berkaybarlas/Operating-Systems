@@ -33,6 +33,8 @@ struct thread_data {
 };
 
 char directions[4] = {'N', 'E', 'S', 'W'};
+int predefinedProbabilties[4] = {0, 0, 0, 0};
+double directionProbabilties[4];
 
 void *initLane(void *laneIndptr); //Put 1 car in each lane
 void *police(void*);
@@ -54,13 +56,13 @@ void printIntersection() {
    cout << "   " << lanes[2].size() << endl;
 }
 
-void cmdline(int argc, char *argv[], double &p, int &s, int &t ) {
+void cmdline(int argc, char *argv[], double &p, int &s, int &t) {
 int flags, opt;
    s = 100;
    p = 1.0;
    t = 0;
     flags = 0;
-    while ((opt = getopt(argc, argv, "s:p:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:p:t:n:e:d:w:")) != -1) {
         switch (opt) {
         case 's':
             s = atoi(optarg);
@@ -73,6 +75,26 @@ int flags, opt;
          case 't':
             t = atof(optarg);
             cout << " T:  " << optarg << endl;
+            break;
+         case 'n':
+            directionProbabilties[0] = atof(optarg);
+            predefinedProbabilties[0] = 1;
+            cout << " North:  " << optarg << endl;
+            break;
+         case 'e':
+            directionProbabilties[1] = atof(optarg);
+            predefinedProbabilties[1] = 1;
+            cout << " East:  " << optarg << endl;
+            break;
+         case 'd':
+            directionProbabilties[2] = atof(optarg);
+            predefinedProbabilties[2] = 1;
+            cout << " South:  " << optarg << endl;
+            break;
+         case 'w':
+            directionProbabilties[3] = atof(optarg);
+            predefinedProbabilties[3] = 1;
+            cout << " West:  " << optarg << endl;
             break;
         default: /* 'Error' */
             fprintf(stderr, "Usage: %s [-t nsecs] [-n] name\n",
@@ -149,7 +171,7 @@ void *police(void *) {
    fprintf(carLog, "_________________________________________________________________\n");
 
    fprintf(policeLog, "Time \t Event \n");
-   fprintf(policeLog, "__________________\n");
+   fprintf(policeLog, "_______________\n");
    
    int turnIndex = 0;
    
@@ -176,6 +198,7 @@ void *police(void *) {
       if(maxNumberOfCars == 0 ) {
          fprintf(policeLog, "%s \t %s \n", 
          convertTime(time(NULL)), "Cell Phone");
+         // Use semaphore and wait for cars 
       }
 
       int maxWait = 0;
@@ -265,11 +288,20 @@ void laneLoop(int laneInd) {
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
 	//cout << randNum << endl;
-	if(randNum < p){
-		car c = {carID++, directions[laneInd], time(NULL), 0, 0};
-		lanes[laneInd].push(c);
-      // Honk
+   int newCar = 0 ;
+   if(predefinedProbabilties[laneInd] == 1) {
+      if(randNum < directionProbabilties[laneInd]) {
+         newCar = 1;
+      }
+   } else if(randNum < p){
+	   newCar = 1;
 	}
+   // Add new car to lane
+   if(newCar) {
+      car c = {carID++, directions[laneInd], time(NULL), 0, 0};
+		   lanes[laneInd].push(c);
+         // Honk
+   }
 	pthread_mutex_unlock(&lane_lock);
 	laneLoop(laneInd);
 }
@@ -279,12 +311,20 @@ void northLaneLoop() {
 	pthread_mutex_lock(&lane_lock);
 	double randNum = (double)rand() / (double)RAND_MAX;
 	//cout << randNum << endl;
-	if(randNum > p){
-		car c = {carID++, directions[0], time(NULL), 0, 0};
+   int newCar = 0 ;
+   if(predefinedProbabilties[0] == 1) {
+      if(randNum < directionProbabilties[0]) {
+         newCar = 1;
+      }
+   } else if(randNum > p){
+		newCar = 1;
+	} 
+   if(newCar) {
+      car c = {carID++, directions[0], time(NULL), 0, 0};
 		lanes[0].push(c);
       // Honk
 		pthread_mutex_unlock(&lane_lock);
-	} else {
+   } else {
 		pthread_mutex_unlock(&lane_lock);
 		pthread_sleep(19);
 	}
