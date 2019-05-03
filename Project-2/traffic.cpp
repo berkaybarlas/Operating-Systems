@@ -39,6 +39,7 @@ void *police(void*);
 void laneLoop(int laneInd); //Loop for lane threads to spawn cars
 void northLaneLoop(); //Lane loop for the special north lane
 char* convertTime(time_t);
+char* normalizeTime(int); 
 
 
 int carID = 0;
@@ -146,6 +147,9 @@ void *police(void *) {
    policeLog = fopen("./police.log", "w+");
    fprintf(carLog, "CarID \t Direction \t Arrival-Time \t Cross-Time \t Wait-Time\n");
    fprintf(carLog, "_________________________________________________________________\n");
+
+   fprintf(policeLog, "Time \t Event \n");
+   fprintf(policeLog, "__________________\n");
    
    int turnIndex = 0;
    
@@ -168,18 +172,24 @@ void *police(void *) {
             maxNumberOfCars = numberOfCars;
          }
       }
+      // Start playing with cell phone
+      if(maxNumberOfCars == 0 ) {
+         fprintf(policeLog, "%s \t %s \n", 
+         convertTime(time(NULL)), "Cell Phone");
+      }
+
       int maxWait = 0;
-  	  for(int i = 0; i < LANE_NUMBER; i++) {
-  	  	if(!lanes[i].empty()){
-		  	car c = lanes[i].front();
-		  	time_t currentTime = time(NULL);
-		  	int waitTime = ( currentTime - c.arrivalTime );
-		  	if(waitTime > maxWait){
-		  		maxWait = waitTime;
-		  		if(waitTime > 20){
-		  			turnIndex = i;
-		  		}
-		  	}
+  	   for(int i = 0; i < LANE_NUMBER; i++) {
+  	  	   if(!lanes[i].empty()) {
+		  	   car c = lanes[i].front();
+		  	   time_t currentTime = time(NULL);
+		  	   int waitTime = ( currentTime - c.arrivalTime );
+		  	   if(waitTime > maxWait){
+		  	   	maxWait = waitTime;
+		  	   	if(waitTime > 20){
+		  	   		turnIndex = i;
+		  	   	}
+		  	   }
       	}
       }
       if(maxNumberOfCars != 0) {
@@ -223,11 +233,17 @@ char* convertTime(time_t fullTime) {
    int hour = localTm->tm_hour;
    int min = localTm->tm_min;
    int sec = localTm->tm_sec;
-   if(sec < 10) 
-      sprintf(Time, "%d:%d:0%d", hour, min, sec);
-   else
-      sprintf(Time, "%d:%d:%d", hour, min, sec);
+   sprintf(Time, "%s:%s:%s", normalizeTime(hour), normalizeTime(min), normalizeTime(sec));
    return Time;
+}
+
+char* normalizeTime(int timeInt) {
+   char* timeString = (char*) malloc(sizeof(char) * 2);
+   if(timeInt < 10) 
+      sprintf(timeString, "0%d", timeInt);
+   else
+      sprintf(timeString, "%d", timeInt);
+   return timeString;
 }
 
 void *initLane(void *laneIndptr) {
@@ -252,6 +268,7 @@ void laneLoop(int laneInd) {
 	if(randNum < p){
 		car c = {carID++, directions[laneInd], time(NULL), 0, 0};
 		lanes[laneInd].push(c);
+      // Honk
 	}
 	pthread_mutex_unlock(&lane_lock);
 	laneLoop(laneInd);
@@ -265,6 +282,7 @@ void northLaneLoop() {
 	if(randNum > p){
 		car c = {carID++, directions[0], time(NULL), 0, 0};
 		lanes[0].push(c);
+      // Honk
 		pthread_mutex_unlock(&lane_lock);
 	} else {
 		pthread_mutex_unlock(&lane_lock);
@@ -272,3 +290,5 @@ void northLaneLoop() {
 	}
 	northLaneLoop();
 }
+
+
