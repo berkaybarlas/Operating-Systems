@@ -192,7 +192,6 @@ void *police(void *) {
       // Priority order 
       // N > E > S > W
       int maxNumberOfCars = 0;
-      int turnIndex = 0;
       struct tm *currentTimeInfo;
       struct tm *arrivalTimeInfo;
 
@@ -351,10 +350,10 @@ void addCarToLane(int laneInd) {
    car c = {carID++, directions[laneInd], time(NULL), 0, 0};
 	lanes[laneInd].push(c);
    pthread_mutex_lock(&car_number);
-   if(carNumber == 0 ) {
+   carNumber++;
+   if(carNumber == 1 ) {
       pthread_cond_signal(&honk);
    }
-   carNumber++;
    pthread_mutex_unlock(&car_number);
 }
 
