@@ -148,19 +148,28 @@ int main (int argc, char *argv[]) {
    }
    // Create Police Thread 
    rc = pthread_create(&threads[LANE_NUMBER], NULL, police, NULL);
+   
+   pthread_mutex_lock(&car_number);
+   while (carNumber < 4) {
+            pthread_cond_wait(&honk,&car_number);
+   }
+   pthread_mutex_unlock(&car_number);
 
    while(duration < s) {
       // Make things
-      if( clock() - prev_sec > ONE_SECOND) {
-         prev_sec = ++second * ONE_SECOND; 
-         cout << second << " second elapsed" << clock() << " " << convertTime(time(NULL)) << endl;
+      pthread_mutex_lock(&lane_lock);
+      if( clock() - prev_sec > CLOCKS_PER_SEC) {
+         prev_sec = ++second * CLOCKS_PER_SEC; 
+         cout << second << " second elapsed " << clock() << " " << convertTime(time(NULL)) << endl;
       }
       if(t == second) {
          t++; 
          printIntersection();
 
       }
+      pthread_mutex_unlock(&lane_lock);
       duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
+      
    }
    printIntersection();
    
@@ -207,16 +216,18 @@ void *police(void *) {
          }
       }
 
+      pthread_mutex_lock(&car_number);
       // Start playing with cell phone
       if(maxNumberOfCars == 0 ) {
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Cell Phone");
          // Use semaphore and wait for cars
          while (carNumber <= 0) {
-            pthread_cond_wait(&honk,&lane_lock);
+            pthread_cond_wait(&honk,&car_number);
          }
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Honk");
          pthread_sleep(3); 
       }
+      pthread_mutex_lock(&car_number);
 
       int maxWait = 0;
   	   for(int i = 0; i < LANE_NUMBER; i++) {
@@ -348,8 +359,8 @@ void northLaneLoop() {
 
 void addCarToLane(int laneInd) {
    car c = {carID++, directions[laneInd], time(NULL), 0, 0};
-	lanes[laneInd].push(c);
    pthread_mutex_lock(&car_number);
+   lanes[laneInd].push(c);
    carNumber++;
    if(carNumber == 1 ) {
       pthread_cond_signal(&honk);
