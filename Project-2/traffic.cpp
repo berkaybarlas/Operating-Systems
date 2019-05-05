@@ -19,6 +19,11 @@ using namespace std;
 #define LANE_NUMBER 4
 #define ONE_SECOND 1000000
 
+#define NORTH 0
+#define EAST 1
+#define SOUTH 2
+#define WEST 3
+
 struct car {
    int carID;
    char direction;
@@ -34,28 +39,30 @@ struct thread_data {
 
 char directions[4] = {'N', 'E', 'S', 'W'};
 int predefinedProbabilties[4] = {0, 0, 0, 0};
-double directionProbabilties[4];
+double directionProbabilties[4]; //set different probability to each direction 
 
-void *initLane(void *laneIndptr); //Put 1 car in each lane
+void *initLane(void *); //Put 1 car in each lane
 void *police(void*);
-void laneLoop(int laneInd); //Loop for lane threads to spawn cars
+void laneLoop(int ); //Loop for lane threads to spawn cars
 void northLaneLoop(); //Lane loop for the special north lane
+void addCarToLane(int );
 char* convertTime(time_t);
 char* normalizeTime(int); 
 
 
-int carID = 0;
-int carNumber = 4; // initial car number
+int carID = 1; // Id of first car
+int carNumber = 0; // initial car number
 double p;
 vector<queue<car> > lanes(4, std::queue<car>());
 pthread_mutex_t print_lock;
 pthread_mutex_t lane_lock;
+pthread_mutex_t car_number;
 pthread_cond_t honk;
 
 void printIntersection() {
-   cout << "   " << lanes[0].size() << endl;
-   cout << lanes[3].size() <<"     " << lanes[1].size() << endl;
-   cout << "   " << lanes[2].size() << endl;
+   cout << "   " << lanes[NORTH].size() << endl;
+   cout << lanes[WEST].size() <<"     " << lanes[EAST].size() << endl;
+   cout << "   " << lanes[SOUTH].size() << endl;
 }
 
 void cmdline(int argc, char *argv[], double &p, int &s, int &t) {
@@ -114,7 +121,7 @@ int main (int argc, char *argv[]) {
    int t;
    srand(time(0));
    
-   if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL)) { 
+   if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL) && pthread_mutex_init(&car_number, NULL))   { 
         printf("\n mutex init has failed\n"); 
         return 1; 
    } 
@@ -146,7 +153,7 @@ int main (int argc, char *argv[]) {
       // Make things
       if( clock() - prev_sec > ONE_SECOND) {
          prev_sec = ++second * ONE_SECOND; 
-         cout << second << " second elapsed" << clock() << endl;
+         cout << second << " second elapsed" << clock() << " " << convertTime(time(NULL)) << endl;
       }
       if(t == second) {
          t++; 
@@ -160,6 +167,7 @@ int main (int argc, char *argv[]) {
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
    pthread_mutex_destroy(&lane_lock); 
+   pthread_mutex_destroy(&car_number); 
    pthread_cond_destroy(&honk);
 
    // Add exit to close all threads
@@ -181,7 +189,7 @@ void *police(void *) {
    int turnIndex = 0;
    
 	while(true) {
-      // Police prototype 
+      // Priority order 
       // N > E > S > W
       int maxNumberOfCars = 0;
       int turnIndex = 0;
@@ -204,11 +212,9 @@ void *police(void *) {
       if(maxNumberOfCars == 0 ) {
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Cell Phone");
          // Use semaphore and wait for cars
-         cout << "Cell phone: " << endl;
          while (carNumber <= 0) {
             pthread_cond_wait(&honk,&lane_lock);
          }
-         cout << "Honk: " << endl;
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Honk");
          pthread_sleep(3); 
       }
@@ -230,10 +236,10 @@ void *police(void *) {
       if(maxNumberOfCars != 0) {
          //cout << "The biggest size: " << maxNumberOfCars << " " <<  turnIndex <<endl;
          car crossingCar = (lanes[turnIndex].front());
-         //printIntersection();
          lanes[turnIndex].pop();
+         pthread_mutex_lock(&car_number);
          carNumber--;
-         //printIntersection();
+         pthread_mutex_unlock(&car_number);
          maxNumberOfCars = 0;
          time_t currentTime = time(NULL);
          currentTimeInfo = localtime(&currentTime);
@@ -283,17 +289,17 @@ char* normalizeTime(int timeInt) {
 }
 
 void *initLane(void *laneIndptr) {
-	int ind = *((int*)laneIndptr);
+	int laneInd = *((int*)laneIndptr);
 	pthread_mutex_lock(&lane_lock);
-	car c = {carID++, directions[ind], time(NULL), 0, 0};
-	lanes[ind].push(c);
+	addCarToLane(laneInd);
 	pthread_mutex_unlock(&lane_lock);
-	if(ind == 0){
+	if(laneInd == 0){
 		northLaneLoop();
 	}
 	else{
-		laneLoop(ind);
+		laneLoop(laneInd);
 	}
+   return NULL;
 }
 
 void laneLoop(int laneInd) {
@@ -311,17 +317,7 @@ void laneLoop(int laneInd) {
 	}
    // Add new car to lane
    if(newCar) {
-      car c = {carID++, directions[laneInd], time(NULL), 0, 0};
-      cout << "CarNumber: " << carNumber << endl;
-      if(carNumber == 0 ) {
-         pthread_cond_signal(&honk);
-         cout << "Honk: " << endl;
-      }
-		lanes[laneInd].push(c);
-      carNumber++;
-      // Honk
-      
-
+      addCarToLane(laneInd);
    }
 	pthread_mutex_unlock(&lane_lock);
 	laneLoop(laneInd);
@@ -341,14 +337,7 @@ void northLaneLoop() {
 		newCar = 1;
 	} 
    if(newCar) {
-      car c = {carID++, directions[0], time(NULL), 0, 0};
-      if(carNumber == 0 ) {
-         pthread_cond_signal(&honk);
-         cout << "Honk: " << endl;
-      }
-		lanes[0].push(c);
-      carNumber++;
-      // Honk
+      addCarToLane(0);
       pthread_cond_signal(&honk);
 		pthread_mutex_unlock(&lane_lock);
    } else {
@@ -358,5 +347,14 @@ void northLaneLoop() {
 	northLaneLoop();
 }
 
-
+void addCarToLane(int laneInd) {
+   car c = {carID++, directions[laneInd], time(NULL), 0, 0};
+	lanes[laneInd].push(c);
+   pthread_mutex_lock(&car_number);
+   carNumber++;
+   if(carNumber == 1 ) {
+      pthread_cond_signal(&honk);
+   }
+   pthread_mutex_unlock(&car_number);
+}
 
