@@ -151,7 +151,7 @@ int main (int argc, char *argv[]) {
    
    pthread_mutex_lock(&car_number);
    while (carNumber < 4) {
-            pthread_cond_wait(&honk,&car_number);
+      pthread_cond_wait(&honk,&car_number);
    }
    pthread_mutex_unlock(&car_number);
 
@@ -219,6 +219,7 @@ void *police(void *) {
       pthread_mutex_lock(&car_number);
       // Start playing with cell phone
       if(maxNumberOfCars == 0 ) {
+         pthread_mutex_unlock(&lane_lock);
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Cell Phone");
          // Use semaphore and wait for cars
          while (carNumber <= 0) {
@@ -226,6 +227,7 @@ void *police(void *) {
          }
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Honk");
          pthread_sleep(3); 
+         pthread_mutex_lock(&lane_lock);
       }
       pthread_mutex_unlock(&car_number);
 
