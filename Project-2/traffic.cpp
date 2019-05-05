@@ -60,6 +60,7 @@ pthread_mutex_t car_number;
 pthread_cond_t honk;
 
 void printIntersection() {
+   cout << "At " << convertTime(time(NULL)) << ":" <<endl;
    cout << "   " << lanes[NORTH].size() << endl;
    cout << lanes[WEST].size() <<"     " << lanes[EAST].size() << endl;
    cout << "   " << lanes[SOUTH].size() << endl;
@@ -149,6 +150,7 @@ int main (int argc, char *argv[]) {
    // Create Police Thread 
    rc = pthread_create(&threads[LANE_NUMBER], NULL, police, NULL);
    
+   // wait for initializing all 4 cars in different lanes
    pthread_mutex_lock(&car_number);
    while (carNumber < 4) {
       pthread_cond_wait(&honk,&car_number);
@@ -160,7 +162,9 @@ int main (int argc, char *argv[]) {
       pthread_mutex_lock(&lane_lock);
       if( clock() - prev_sec > CLOCKS_PER_SEC) {
          prev_sec = ++second * CLOCKS_PER_SEC; 
-         cout << second << " second elapsed " << clock() << " " << convertTime(time(NULL)) << endl;
+
+         // Uncomment for debugging
+         // cout << second << " second elapsed " << clock() << " " << convertTime(time(NULL)) << endl;
       }
       if(t == second) {
          t++; 
@@ -171,7 +175,6 @@ int main (int argc, char *argv[]) {
       duration = (clock() - start ) / (double) CLOCKS_PER_SEC;
       
    }
-   printIntersection();
    
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
@@ -258,18 +261,18 @@ void *police(void *) {
          arrivalTimeInfo = localtime(&crossingCar.arrivalTime);
 
          int waitTime = ( currentTime - crossingCar.arrivalTime );
-         fprintf(carLog, "%d \t\t %c \t\t\t %s \t\t %s \t\t %d\n", 
+         fprintf(carLog, "%d \t\t %c \t %s \t %s \t\t %d\n", 
          crossingCar.carID, 
          crossingCar.direction,  
          convertTime(crossingCar.arrivalTime),
          convertTime(currentTime),
          waitTime);
 
-         cout << "Crossing Car: " << crossingCar.carID << "\t" 
-         << crossingCar.direction << "\t" 
-         << convertTime(crossingCar.arrivalTime) << "\t" 
-         << convertTime(currentTime) << "\t"
-         << waitTime << "\t"  << endl;
+         // cout << "Crossing Car: " << crossingCar.carID << "\t" 
+         // << crossingCar.direction << "\t" 
+         // << convertTime(crossingCar.arrivalTime) << "\t" 
+         // << convertTime(currentTime) << "\t"
+         // << waitTime << "\t"  << endl;
 
          pthread_mutex_unlock(&lane_lock);
          pthread_sleep(1);
