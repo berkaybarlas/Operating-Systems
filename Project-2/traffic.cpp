@@ -227,7 +227,7 @@ void *police(void *) {
          fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Honk");
          pthread_sleep(3); 
       }
-      pthread_mutex_lock(&car_number);
+      pthread_mutex_unlock(&car_number);
 
       int maxWait = 0;
   	   for(int i = 0; i < LANE_NUMBER; i++) {
