@@ -1,5 +1,9 @@
 ##Assignment 1
 .shelldon.o
+
+##Project 2
+
+
 ### VScode ###
 .vscode*
 ### Linux ###
@@ -52,6 +56,7 @@ Temporary Items
 *.aux
 *.lof
 *.log
+!*/SampleLogFiles/*
 *.lot
 *.fls
 *.out
