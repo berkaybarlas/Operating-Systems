@@ -241,6 +241,8 @@ void *police(void *) {
          carNumber--;
          pthread_mutex_unlock(&car_number);
          maxNumberOfCars = 0;
+         pthread_mutex_unlock(&lane_lock);
+         pthread_sleep(1);
          time_t currentTime = time(NULL);
          currentTimeInfo = localtime(&currentTime);
          arrivalTimeInfo = localtime(&crossingCar.arrivalTime);
@@ -259,8 +261,6 @@ void *police(void *) {
          << convertTime(currentTime) << "\t"
          << waitTime << "\t"  << endl;
 
-         pthread_mutex_unlock(&lane_lock);
-         pthread_sleep(1);
       } else {
          pthread_mutex_unlock(&lane_lock);
       }
