@@ -54,7 +54,6 @@ int carID = 1; // Id of first car
 int carNumber = 0; // initial car number
 double p;
 vector<queue<car> > lanes(4, std::queue<car>());
-pthread_mutex_t print_lock;
 pthread_mutex_t lane_lock;
 pthread_mutex_t car_number;
 pthread_cond_t honk;
@@ -122,7 +121,7 @@ int main (int argc, char *argv[]) {
    int t;
    srand(time(0));
    
-   if (pthread_mutex_init(&print_lock, NULL) != 0 && pthread_mutex_init(&lane_lock, NULL) && pthread_mutex_init(&car_number, NULL))   { 
+   if (pthread_mutex_init(&lane_lock, NULL) && pthread_mutex_init(&car_number, NULL))   { 
         printf("\n mutex init has failed\n"); 
         return 1; 
    } 
@@ -151,11 +150,11 @@ int main (int argc, char *argv[]) {
    rc = pthread_create(&threads[LANE_NUMBER], NULL, police, NULL);
    
    // wait for initializing all 4 cars in different lanes
-   pthread_mutex_lock(&car_number);
-   while (carNumber < 4) {
-      pthread_cond_wait(&honk,&car_number);
+   // Semaphores could be used but there is no need since it is just a read 
+   // Added to ensure at least 4 cars at time 0
+   while (carNumber < 4) {  
    }
-   pthread_mutex_unlock(&car_number);
+   
 
    while(duration < s) {
       // Make things
@@ -177,11 +176,11 @@ int main (int argc, char *argv[]) {
    }
    
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
-   pthread_mutex_destroy(&print_lock); 
    pthread_mutex_destroy(&lane_lock); 
    pthread_mutex_destroy(&car_number); 
    pthread_cond_destroy(&honk);
 
+   exit(0);
    // Add exit to close all threads
 }
 
