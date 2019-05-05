@@ -45,10 +45,12 @@ char* normalizeTime(int);
 
 
 int carID = 0;
+int carNumber = 4; // initial car number
 double p;
 vector<queue<car> > lanes(4, std::queue<car>());
 pthread_mutex_t print_lock;
 pthread_mutex_t lane_lock;
+pthread_cond_t honk;
 
 void printIntersection() {
    cout << "   " << lanes[0].size() << endl;
@@ -116,7 +118,8 @@ int main (int argc, char *argv[]) {
         printf("\n mutex init has failed\n"); 
         return 1; 
    } 
-   
+   pthread_cond_init (&honk, NULL);
+
    cmdline(argc, argv, p, s, t);
    time_t startTime = time(0);
    clock_t start = clock();
@@ -157,6 +160,8 @@ int main (int argc, char *argv[]) {
    cout << "finished computation at " << clock() << " elapsed time: " << duration << "s\n";
    pthread_mutex_destroy(&print_lock); 
    pthread_mutex_destroy(&lane_lock); 
+   pthread_cond_destroy(&honk);
+
    // Add exit to close all threads
 }
 
@@ -194,11 +199,18 @@ void *police(void *) {
             maxNumberOfCars = numberOfCars;
          }
       }
+
       // Start playing with cell phone
       if(maxNumberOfCars == 0 ) {
-         fprintf(policeLog, "%s \t %s \n", 
-         convertTime(time(NULL)), "Cell Phone");
-         // Use semaphore and wait for cars 
+         fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Cell Phone");
+         // Use semaphore and wait for cars
+         cout << "Cell phone: " << endl;
+         while (carNumber <= 0) {
+            pthread_cond_wait(&honk,&lane_lock);
+         }
+         cout << "Honk: " << endl;
+         fprintf(policeLog, "%s \t %s \n", convertTime(time(NULL)), "Honk");
+         pthread_sleep(3); 
       }
 
       int maxWait = 0;
@@ -220,6 +232,7 @@ void *police(void *) {
          car crossingCar = (lanes[turnIndex].front());
          //printIntersection();
          lanes[turnIndex].pop();
+         carNumber--;
          //printIntersection();
          maxNumberOfCars = 0;
          time_t currentTime = time(NULL);
@@ -299,8 +312,16 @@ void laneLoop(int laneInd) {
    // Add new car to lane
    if(newCar) {
       car c = {carID++, directions[laneInd], time(NULL), 0, 0};
-		   lanes[laneInd].push(c);
-         // Honk
+      cout << "CarNumber: " << carNumber << endl;
+      if(carNumber == 0 ) {
+         pthread_cond_signal(&honk);
+         cout << "Honk: " << endl;
+      }
+		lanes[laneInd].push(c);
+      carNumber++;
+      // Honk
+      
+
    }
 	pthread_mutex_unlock(&lane_lock);
 	laneLoop(laneInd);
@@ -321,8 +342,14 @@ void northLaneLoop() {
 	} 
    if(newCar) {
       car c = {carID++, directions[0], time(NULL), 0, 0};
+      if(carNumber == 0 ) {
+         pthread_cond_signal(&honk);
+         cout << "Honk: " << endl;
+      }
 		lanes[0].push(c);
+      carNumber++;
       // Honk
+      pthread_cond_signal(&honk);
 		pthread_mutex_unlock(&lane_lock);
    } else {
 		pthread_mutex_unlock(&lane_lock);
@@ -330,5 +357,6 @@ void northLaneLoop() {
 	}
 	northLaneLoop();
 }
+
 
 
