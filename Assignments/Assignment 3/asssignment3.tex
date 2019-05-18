@@ -10,7 +10,7 @@
 \usepackage{subcaption}
 \usepackage{listings}
 \usepackage{color}
- 
+\usepackage{textcomp}
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -78,15 +78,36 @@ Instructor: & Didem Unat % Instructor/supervisor
 
 
 \section{Problem 1}
-
-Which of these algorithms has the most efficient memory usage?
+5 memory partitions of 100 KB, 500 KB, 200 KB, 300 KB, and 600KB (in order).
+ How would you place the process of 212 KB, 417 KB, 112 KB, and 426 KB
+\\
+\\ \textbf{Which of these algorithms has the most efficient memory usage?}
+\\ Best-fit algorithm is the most efficient one in terms of memory usage utilization.
 \begin{description}
-    \item[first-fit Algorithm] \hfill 
-    
-    \item[best-fit Algorithm] \hfill 
-    
-    \item[worst-fit Algorithm] \hfill 
-    
+    \item[first-fit Algorithm] \hfill \\
+    Allocate the first hole that is big enough.
+    \\ 100KB $\,\to\,$ 
+    \\ 500KB $\,\to\,$ 212KB
+    \\ 200KB $\,\to\,$ 112KB
+    \\ 300KB $\,\to\,$
+    \\ 600KB $\,\to\,$ 417KB
+    \\ Due to external fragmentation 426KB couldn't allocated.
+     \item[best-fit Algorithm] \hfill \\
+    Allocate the smallest hole that is big enough; must search entire list, unless ordered by size.
+    \\This strategy produces the smallest leftover hole.
+    \\ 100KB $\,\to\,$
+    \\ 500KB $\,\to\,$ 417KB
+    \\ 200KB $\,\to\,$ 112KB
+    \\ 300KB $\,\to\,$ 212KB
+    \\ 600KB $\,\to\,$ 426KB
+    \item[worst-fit Algorithm] \hfill \\
+    Allocate the largest hole; must also search entire list.
+    \\ 100KB $\,\to\,$ 
+    \\ 500KB $\,\to\,$ 417KB
+    \\ 200KB $\,\to\,$ 
+    \\ 300KB $\,\to\,$ 112KB
+    \\ 600KB $\,\to\,$ 212KB
+    \\ Due to external fragmentation 426KB couldn't allocated.
 \end{description}
 
 \section{Problem 2}
@@ -109,26 +130,26 @@ table field, and an offset
 \subsection{5 frames for process}
 \begin{description}
     \item[LRU] \hfill \\ 
-    Page fault number:
-    % \includegraphics[width=1\linewidth]{./fcfs.png} 
+    Page fault number:\\
+    \includegraphics[width=1\linewidth]{./LRU6.png} 
     \item[FIFO] \hfill \\
-    Page fault number:
-    % \includegraphics[width=1\linewidth]{./fcfs.png} 
+    Page fault number:\\
+    \includegraphics[width=1\linewidth]{./FIFO6.png} 
     \item[Optimal] \hfill \\
-    Page fault number:
-    % \includegraphics[width=1\linewidth]{./fcfs.png} 
+    Page fault number:\\
+    \includegraphics[width=1\linewidth]{./Optimal6.png} 
 \end{description}
 \subsection{6 frames for process}
 \begin{description}
     \item[LRU] \hfill \\ 
-    Page fault number: 
-    % \includegraphics[width=1\linewidth]{./fcfs.png}
+    Page fault number:\\ 
+    \includegraphics[width=1\linewidth]{./LRU5.png}
     \item[FIFO] \hfill \\
-    Page fault number: 
-    % \includegraphics[width=1\linewidth]{./fcfs.png}
+    Page fault number:\\ 
+    \includegraphics[width=1\linewidth]{./FIFO5.png}
     \item[Optimal] \hfill \\
-    Page fault number: 
-    % \includegraphics[width=1\linewidth]{./fcfs.png}
+    Page fault number:\\ 
+    \includegraphics[width=1\linewidth]{./Optimal5.png}
 \end{description}
 
 \newpage
