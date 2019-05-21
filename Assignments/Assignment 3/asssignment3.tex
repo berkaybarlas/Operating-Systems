@@ -62,7 +62,7 @@
 
 \begin{center}
 \begin{tabular}{l r}
-Date Performed: & April 15, 2019 \\ % Date the experiment was performed
+%Date Performed: & May 21, 2019 \\ % Date the experiment was performed
 Instructor: & Didem Unat % Instructor/supervisor
 \end{tabular}
 \end{center}
@@ -92,6 +92,8 @@ Instructor: & Didem Unat % Instructor/supervisor
     \\ 300KB $\,\to\,$
     \\ 600KB $\,\to\,$ 417KB
     \\ Due to external fragmentation 426KB couldn't allocated.
+    Remaining partition of memory size is less than 426KB.
+    \\ Total memory 1700KB , used memory 841KB. 49.41\% using rate
      \item[best-fit Algorithm] \hfill \\
     Allocate the smallest hole that is big enough; must search entire list, unless ordered by size.
     \\This strategy produces the smallest leftover hole.
@@ -100,6 +102,7 @@ Instructor: & Didem Unat % Instructor/supervisor
     \\ 200KB $\,\to\,$ 112KB
     \\ 300KB $\,\to\,$ 212KB
     \\ 600KB $\,\to\,$ 426KB
+    \newpage
     \item[worst-fit Algorithm] \hfill \\
     Allocate the largest hole; must also search entire list.
     \\ 100KB $\,\to\,$ 
@@ -113,14 +116,19 @@ Instructor: & Didem Unat % Instructor/supervisor
 \section{Problem 2}
 A system with 30-bit logical (virtual) address uses a two-level page table.
 Logical addresses are split into an 8-bit top-level page table field, a 12-bit second-level page
-table field, and an offset
+table field, and an offset.
 %\begin{equation*}
  %   CPU utilisation  = 100 * \frac{{Total Time Spend on Processes}}{\mathrm{Total Time Spend on Execution}}
 %\begin{center}\ce{}\end{center}
 %\end{equation*}
 \begin{description}
-    \item[What is the size of a page in this system ?] \hfill \\ 
+    \item[What is the size of a page in this system ?] \hfill \\
+    20 bits are used for the virtual page numbers and 10 bits left for the offset. Thus, the size of page in the system is 1KB.
+    \[2^{10} = 1KB\]
     \item[How many pages are there in the address space ?] \hfill \\ 
+    Since 20 bits are used for the virtual page numbers, there are 1048576 pages in the address space.
+    \[2^{20} = 1048576\]
+    
 \end{description}
 
 \newpage
@@ -130,31 +138,35 @@ table field, and an offset
 \subsection{5 frames for process}
 \begin{description}
     \item[LRU] \hfill \\ 
-    Page fault number:\\
-    \includegraphics[width=1\linewidth]{./LRU6.png} 
+    Page fault number: 8\\
+    \includegraphics[width=1\linewidth]{./LRU5.png} 
     \item[FIFO] \hfill \\
-    Page fault number:\\
-    \includegraphics[width=1\linewidth]{./FIFO6.png} 
+    Page fault number: 10\\
+    \includegraphics[width=1\linewidth]{./FIFO5.png} 
     \item[Optimal] \hfill \\
-    Page fault number:\\
-    \includegraphics[width=1\linewidth]{./Optimal6.png} 
+    Page fault number: 7\\
+    \includegraphics[width=1\linewidth]{./Optimal5.png} 
 \end{description}
+\newpage
 \subsection{6 frames for process}
 \begin{description}
     \item[LRU] \hfill \\ 
-    Page fault number:\\ 
-    \includegraphics[width=1\linewidth]{./LRU5.png}
+    Page fault number: 7\\ 
+    \includegraphics[width=1\linewidth]{./LRU6.png}
     \item[FIFO] \hfill \\
-    Page fault number:\\ 
-    \includegraphics[width=1\linewidth]{./FIFO5.png}
+    Page fault number: 10\\ 
+    \includegraphics[width=1\linewidth]{./FIFO6.png}
     \item[Optimal] \hfill \\
-    Page fault number:\\ 
-    \includegraphics[width=1\linewidth]{./Optimal5.png}
+    Page fault number: 7\\ 
+    \includegraphics[width=1\linewidth]{./Optimal6.png}
 \end{description}
 
 \newpage
 \section{Problem 4 Pure Demand Paging}
 \subsection{Page fault rate when a process first starts execution}
+When a process starts execution, page fault rate will be high since required pages are not loaded into memory.
 \subsection{Page fault rate once the working set for a process is loaded into memory}
+Page fault rate will be low since required pages are loaded into memory.
 \subsection{Page fault rate when a process changes its locality and its new working set size is larger that the size of free memory}
+Again the page fault rate will be high. The system needs to get more free physical memory or reclaim more pages. 
 \end{document}
