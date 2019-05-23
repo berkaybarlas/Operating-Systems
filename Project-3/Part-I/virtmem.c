@@ -13,7 +13,7 @@
 #include <string.h>
 
 #define TLB_SIZE 16
-#define PAGES 256
+#define PAGES 64
 #define PAGE_MASK 255
 
 #define PAGE_SIZE 256
@@ -42,6 +42,15 @@ signed char main_memory[MEMORY_SIZE];
 
 // Pointer to memory mapped backing file
 signed char *backing;
+
+int fifoPageSelect(unsigned char *free_page);
+int lruPageSelect();
+
+int fifoPageSelect(unsigned char *free_page){
+	int selectedPage = *free_page;
+	*free_page = (*free_page + 1) % PAGES;
+	return selectedPage;
+}
 
 int max(int a, int b)
 {
@@ -103,6 +112,12 @@ int main(int argc, const char *argv[])
   // Number of the next unallocated physical page in main memory
   unsigned char free_page = 0;
   
+  // Table containing last reference times of each page, initially all zero
+  int pageRefTbl[PAGES] = {0};
+  
+  // Counter for holding the step count we have taken
+  int counter = 0;
+  
   while (fgets(buffer, BUFFER_SIZE, input_fp) != NULL) {
     total_addresses++;
     int logical_address = atoi(buffer);
@@ -126,7 +141,6 @@ int main(int argc, const char *argv[])
         page_faults++;
               
         physical_page = free_page;
-        free_page++;
         
         // Copy page from backing file into physical memory
         memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
