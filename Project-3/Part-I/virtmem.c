@@ -47,14 +47,32 @@ signed char main_memory[MEMORY_SIZE];
 signed char *backing;
 
 // Algorithms to return page frame to write on with different strategies
-int fifoPageSelect(unsigned char *free_page);
-int lruPageSelect();
-
 int fifoPageSelect(unsigned char *free_page){
 	printf("Checkpoint 0\n");
 	int selectedPage = *free_page;
 	*free_page = (*free_page + 1) % PAGE_FRAMES;
 	return selectedPage;
+}
+
+int lruPageSelect(int* pageRefTbl, int logical_page, int total_addresses) {
+  
+  // pagetable
+  if(total_addresses < PAGE_FRAMES) {
+    return total_addresses - 1;
+  }
+
+  int i;
+  int minIndex = 0;
+  int minValue = 0;
+  for(i = 0; i < PAGES; i++) {
+    if(pagetable[i] != -1) {
+      if(minValue == 0 || minValue < pageRefTbl[i]) {
+        minIndex = i;
+        minValue = pageRefTbl[i];
+      }
+    }
+  }
+  return pagetable[minIndex]; 
 }
 
 void putPageInMemory(int logical_page, int physical_page){
@@ -158,24 +176,27 @@ int main(int argc, char **argv)
     
     int offset = logical_address & OFFSET_MASK;
     int logical_page = (logical_address >> OFFSET_BITS) & PAGE_MASK;
-    
+    // Give 
+    if(p == 1) { 
+      pageRefTbl[logical_page] = total_addresses;
+    } 
+
     int physical_page = search_tlb(logical_page);
     printf("%d\n", logical_address);
     // TLB hit
     if (physical_page != -1) {
       tlb_hits++;
       // TLB miss
-      printf("TLB HIT %d\n", logical_address);
     } else {
       physical_page = pagetable[logical_page];
-      printf("TLB MISS %d\n", logical_address);
       // Page fault
       if (physical_page == -1) {
-        printf("PAGE FAULT %d\n", logical_address);
         page_faults++;
         if(p == 0){
         	printf("Checkpoint -1\n");
         	physical_page = fifoPageSelect(&free_page);
+        } else if (p == 1){
+          physical_page = lruPageSelect(pageRefTbl, logical_page, total_addresses);
         }
         // Copy page from backing file into physical memory
         putPageInMemory(logical_page, physical_page);
