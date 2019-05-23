@@ -13,14 +13,15 @@
 #include <string.h>
 
 #define TLB_SIZE 16
-#define PAGES 64
+#define PAGES 256
+#define PAGE_FRAMES 64
 #define PAGE_MASK 255
 
 #define PAGE_SIZE 256
 #define OFFSET_BITS 8
 #define OFFSET_MASK 255
 
-#define MEMORY_SIZE PAGES * PAGE_SIZE
+#define MEMORY_SIZE PAGE_FRAMES * PAGE_SIZE
 
 // Max number of characters per line of input file to read.
 #define BUFFER_SIZE 10
@@ -43,14 +44,17 @@ signed char main_memory[MEMORY_SIZE];
 // Pointer to memory mapped backing file
 signed char *backing;
 
+// Algorithms to return page frame to write on with different strategies
 int fifoPageSelect(unsigned char *free_page);
 int lruPageSelect();
 
 int fifoPageSelect(unsigned char *free_page){
 	int selectedPage = *free_page;
-	*free_page = (*free_page + 1) % PAGES;
+	*free_page = (*free_page + 1) % PAGE_FRAMES;
 	return selectedPage;
 }
+
+void putPageInMemory(int physicalPage);
 
 int max(int a, int b)
 {
@@ -113,10 +117,7 @@ int main(int argc, const char *argv[])
   unsigned char free_page = 0;
   
   // Table containing last reference times of each page, initially all zero
-  int pageRefTbl[PAGES] = {0};
-  
-  // Counter for holding the step count we have taken
-  int counter = 0;
+  int pageRefTbl[PAGE_FRAMES] = {0};
   
   while (fgets(buffer, BUFFER_SIZE, input_fp) != NULL) {
     total_addresses++;
