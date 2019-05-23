@@ -106,28 +106,32 @@ int main(int argc, const char *argv[])
   while (fgets(buffer, BUFFER_SIZE, input_fp) != NULL) {
     total_addresses++;
     int logical_address = atoi(buffer);
+    
     int offset = logical_address & OFFSET_MASK;
     int logical_page = (logical_address >> OFFSET_BITS) & PAGE_MASK;
     
     int physical_page = search_tlb(logical_page);
+    printf("%d\n", logical_address);
     // TLB hit
     if (physical_page != -1) {
       tlb_hits++;
       // TLB miss
+      printf("TLB HIT %d\n", logical_address);
     } else {
       physical_page = pagetable[logical_page];
-      
+      printf("TLB MISS %d\n", logical_address);
       // Page fault
       if (physical_page == -1) {
-	page_faults++;
+        printf("PAGE FAULT %d\n", logical_address);
+        page_faults++;
+              
+        physical_page = free_page;
+        free_page++;
         
-	physical_page = free_page;
-	free_page++;
-	
-	// Copy page from backing file into physical memory
-	memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
-	
-	pagetable[logical_page] = physical_page;
+        // Copy page from backing file into physical memory
+        memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
+        
+        pagetable[logical_page] = physical_page;
       }
       
       add_to_tlb(logical_page, physical_page);
