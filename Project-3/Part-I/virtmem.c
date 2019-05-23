@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define TLB_SIZE 16
 #define PAGES 256
@@ -84,14 +85,35 @@ void add_to_tlb(unsigned char logical, unsigned char physical) {
   entry->logical = logical;
   entry->physical = physical;
 }
+void cmdline(int argc, char **argv, int *p) {
+  int opt = 0;
+  opterr = 0;
+  while (optind < argc) {
+    while ((opt = getopt(argc, argv, "p:")) != -1) {
+        switch (opt) {
+        case 'p':
+            *p = atoi(optarg);
+            printf("p:%d\n",*p);
+            break;
+        default: /* 'Error' */
+            fprintf(stderr, "Usage: %s [-t nsecs] [-n] name\n",
+                    argv[0]);
+            exit(EXIT_FAILURE);
+        }
+        
+    }
+    optind++;
+  }
+}
 
-int main(int argc, const char *argv[])
+int main(int argc, char **argv)
 {
-  if (argc != 3) {
-    fprintf(stderr, "Usage ./virtmem backingstore input\n");
+  if (argc < 3) {
+    fprintf(stderr, "Usage ./virtmem backingstore input %d\n", argc);
     exit(1);
   }
-  
+  int p = 0;
+  cmdline(argc, argv, &p);
   const char *backing_filename = argv[1]; 
   int backing_fd = open(backing_filename, O_RDONLY);
   backing = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, backing_fd, 0); 
