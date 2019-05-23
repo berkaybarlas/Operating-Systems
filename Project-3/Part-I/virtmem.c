@@ -23,6 +23,7 @@
 #define OFFSET_MASK 255
 
 #define MEMORY_SIZE PAGE_FRAMES * PAGE_SIZE
+#define BACKING_SIZE PAGES * PAGE_SIZE
 
 // Max number of characters per line of input file to read.
 #define BUFFER_SIZE 10
@@ -50,12 +51,22 @@ int fifoPageSelect(unsigned char *free_page);
 int lruPageSelect();
 
 int fifoPageSelect(unsigned char *free_page){
+	printf("Checkpoint 0\n");
 	int selectedPage = *free_page;
 	*free_page = (*free_page + 1) % PAGE_FRAMES;
 	return selectedPage;
 }
 
-void putPageInMemory(int physicalPage);
+void putPageInMemory(int logical_page, int physical_page){
+	printf("Physical page: %d\n", physical_page);
+	 memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
+	 for(int i = 0; i < PAGES; i++){
+	 	if(pagetable[i] == physical_page){
+	 		pagetable[i] = -1;
+	 	}
+	 }
+	 pagetable[logical_page] = physical_page;
+}
 
 int max(int a, int b)
 {
@@ -94,7 +105,7 @@ void cmdline(int argc, char **argv, int *p) {
         case 'p':
             *p = atoi(optarg);
             printf("p:%d\n",*p);
-            break;
+            return;
         default: /* 'Error' */
             fprintf(stderr, "Usage: %s [-t nsecs] [-n] name\n",
                     argv[0]);
@@ -116,7 +127,7 @@ int main(int argc, char **argv)
   cmdline(argc, argv, &p);
   const char *backing_filename = argv[1]; 
   int backing_fd = open(backing_filename, O_RDONLY);
-  backing = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, backing_fd, 0); 
+  backing = mmap(0, BACKING_SIZE, PROT_READ, MAP_PRIVATE, backing_fd, 0); 
   
   const char *input_filename = argv[2];
   FILE *input_fp = fopen(input_filename, "r");
@@ -139,7 +150,7 @@ int main(int argc, char **argv)
   unsigned char free_page = 0;
   
   // Table containing last reference times of each page, initially all zero
-  int pageRefTbl[PAGE_FRAMES] = {0};
+  int pageRefTbl[PAGES] = {0};
   
   while (fgets(buffer, BUFFER_SIZE, input_fp) != NULL) {
     total_addresses++;
@@ -162,13 +173,12 @@ int main(int argc, char **argv)
       if (physical_page == -1) {
         printf("PAGE FAULT %d\n", logical_address);
         page_faults++;
-              
-        physical_page = free_page;
-        
+        if(p == 0){
+        	printf("Checkpoint -1\n");
+        	physical_page = fifoPageSelect(&free_page);
+        }
         // Copy page from backing file into physical memory
-        memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
-        
-        pagetable[logical_page] = physical_page;
+        putPageInMemory(logical_page, physical_page);
       }
       
       add_to_tlb(logical_page, physical_page);
