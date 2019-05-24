@@ -47,15 +47,16 @@ signed char main_memory[MEMORY_SIZE];
 signed char *backing;
 
 // Algorithms to return page frame to write on with different strategies
+// FIFO algorithm for page replacement algorithm that uses modulo
 int fifoPageSelect(unsigned char *free_page){
 	int selectedPage = *free_page;
 	*free_page = (*free_page + 1) % PAGE_FRAMES;
 	return selectedPage;
 }
-
+// LRU  algorithm for page replacement algorithm that uses counting table
 int lruPageSelect(int* pageRefTbl, int logical_page, int total_addresses) {
   
-  // pagetable
+  // If the total address number is less than page frames there is no need for page replacement
   if(total_addresses < PAGE_FRAMES) {
     return total_addresses - 1;
   }
@@ -74,6 +75,7 @@ int lruPageSelect(int* pageRefTbl, int logical_page, int total_addresses) {
   return pagetable[minIndex]; 
 }
 
+// Copies page from backing to memory and updates the page table 
 void putPageInMemory(int logical_page, int physical_page){
 	 memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
 	 for(int i = 0; i < PAGES; i++){
@@ -112,6 +114,9 @@ void add_to_tlb(unsigned char logical, unsigned char physical) {
   entry->logical = logical;
   entry->physical = physical;
 }
+
+// Take command line arguments 
+// The only existing flag is p
 void cmdline(int argc, char **argv, int *p) {
   int opt = 0;
   opterr = 0;
