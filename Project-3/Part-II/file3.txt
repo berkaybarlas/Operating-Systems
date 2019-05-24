@@ -1,1 +1,1 @@
-This is the file for soft links.
+Does file4 exist?
