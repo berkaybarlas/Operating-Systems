@@ -49,7 +49,6 @@ signed char *backing;
 // Algorithms to return page frame to write on with different strategies
 // FIFO algorithm for page replacement algorithm that uses modulo
 int fifoPageSelect(unsigned char *free_page){
-	printf("Checkpoint 0\n");
 	int selectedPage = *free_page;
 	*free_page = (*free_page + 1) % PAGE_FRAMES;
 	return selectedPage;
@@ -78,7 +77,6 @@ int lruPageSelect(int* pageRefTbl, int logical_page, int total_addresses) {
 
 // Copies page from backing to memory and updates the page table 
 void putPageInMemory(int logical_page, int physical_page){
-	printf("Physical page: %d\n", physical_page);
 	 memcpy(main_memory + physical_page * PAGE_SIZE, backing + logical_page * PAGE_SIZE, PAGE_SIZE);
 	 for(int i = 0; i < PAGES; i++){
 	 	if(pagetable[i] == physical_page){
@@ -187,7 +185,6 @@ int main(int argc, char **argv)
     } 
 
     int physical_page = search_tlb(logical_page);
-    printf("%d\n", logical_address);
     // TLB hit
     if (physical_page != -1) {
       tlb_hits++;
@@ -198,7 +195,6 @@ int main(int argc, char **argv)
       if (physical_page == -1) {
         page_faults++;
         if(p == 0){
-        	printf("Checkpoint -1\n");
         	physical_page = fifoPageSelect(&free_page);
         } else if (p == 1){
           physical_page = lruPageSelect(pageRefTbl, logical_page, total_addresses);
