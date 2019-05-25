@@ -54,11 +54,12 @@ int fifoPageSelect(unsigned char *free_page){
 	return selectedPage;
 }
 // LRU  algorithm for page replacement algorithm that uses counting table
-int lruPageSelect(int* pageRefTbl, int logical_page, int total_addresses) {
+int lruPageSelect(int* pageRefTbl, int logical_page, int pageFault) {
   
-  // If the total address number is less than page frames there is no need for page replacement
-  if(total_addresses < PAGE_FRAMES) {
-    return total_addresses - 1;
+  // If the pageFault number is less than page frames there is no need for page replacement
+  // which means there are still space for new pages without replacement
+  if(pageFault <= PAGE_FRAMES) {
+    return pageFault - 1;
   }
 
   int i;
@@ -66,13 +67,14 @@ int lruPageSelect(int* pageRefTbl, int logical_page, int total_addresses) {
   int minValue = 0;
   for(i = 0; i < PAGES; i++) {
     if(pagetable[i] != -1) {
-      if(minValue == 0 || minValue < pageRefTbl[i]) {
+      if(minValue == 0 || minValue > pageRefTbl[i]) {
         minIndex = i;
         minValue = pageRefTbl[i];
+        
       }
     }
   }
-  return pagetable[minIndex]; 
+return pagetable[minIndex]; 
 }
 
 // Copies page from backing to memory and updates the page table 
@@ -179,25 +181,31 @@ int main(int argc, char **argv)
     
     int offset = logical_address & OFFSET_MASK;
     int logical_page = (logical_address >> OFFSET_BITS) & PAGE_MASK;
-    // Give 
+    
+    // Use total addresses as a counting number in page referance table
     if(p == 1) { 
       pageRefTbl[logical_page] = total_addresses;
-    } 
+    }
 
     int physical_page = search_tlb(logical_page);
-    // TLB hit
+    
     if (physical_page != -1) {
+      // TLB hit
       tlb_hits++;
-      // TLB miss
+      
     } else {
+      // TLB miss
+
       physical_page = pagetable[logical_page];
-      // Page fault
+      
       if (physical_page == -1) {
+        // Page fault
+        // Increase unique total Address
         page_faults++;
         if(p == 0){
         	physical_page = fifoPageSelect(&free_page);
-        } else if (p == 1){
-          physical_page = lruPageSelect(pageRefTbl, logical_page, total_addresses);
+        } else if (p == 1) {
+          physical_page = lruPageSelect(pageRefTbl, logical_page, page_faults);
         }
         // Copy page from backing file into physical memory
         putPageInMemory(logical_page, physical_page);
@@ -205,7 +213,6 @@ int main(int argc, char **argv)
       
       add_to_tlb(logical_page, physical_page);
     }
-    
     int physical_address = (physical_page << OFFSET_BITS) | offset;
     signed char value = main_memory[physical_page * PAGE_SIZE + offset];
     
